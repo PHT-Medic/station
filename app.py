@@ -198,5 +198,18 @@ def get_connection(conn_id, session=None):
             response=json.dumps(_conn_to_dict(connection)))
 
 
+@app.route('/api/health', methods=[_GET])
+@provide_session
+def get_health(session=None):
+    try:
+        session.execute('SELECT 1')
+        status = 'HEALTHY'
+    except:
+        status = 'UNHEALTHY'
+    return {
+        'status': status
+    }
+
+
 if __name__ == '__main__':
     app.run('0.0.0.0', port=4000)
