@@ -1,4 +1,4 @@
-FROM python:3.8.0-slim-buster
+FROM python:3.7.6-slim-buster
 
 SHELL [ "/bin/bash", "-euo", "pipefail", "-c" ]
 
@@ -16,10 +16,7 @@ ENV LC_ALL en_US.UTF-8
 ENV LC_CTYPE en_US.UTF-8
 ENV LC_MESSAGES en_US.UTF-8
 
-COPY app.py /usr/local/
 COPY requirements.txt /tmp/
-COPY scripts/entrypoint.sh /entrypoint.sh
-COPY config/airflow.cfg ${AIRFLOW_USER_HOME}/airflow.cfg
 RUN apt-get update -yqq \
     && apt-get upgrade -yqq \
     && apt-get install -yqq --no-install-recommends --no-install-suggests \
@@ -34,7 +31,6 @@ RUN apt-get update -yqq \
     && pip install --extra-index-url 'https://pypiserver.lukaszimmermann.dev' --no-cache-dir -r /tmp/requirements.txt \
     && apt-get purge --auto-remove -yqq \
         build-essential \
-        libpq-dev \
     && apt-get autoremove -yqq --purge \
     && apt-get clean \
     && rm -rf \
@@ -44,6 +40,9 @@ RUN apt-get update -yqq \
         /usr/share/man \
         /usr/share/doc \
         /usr/share/doc-base && sync
+COPY app.py /usr/local/
+COPY scripts/entrypoint.sh /entrypoint.sh
+COPY config/airflow.cfg ${AIRFLOW_USER_HOME}/airflow.cfg
 
 EXPOSE 4000 8080 5555 8793
 

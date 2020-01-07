@@ -55,6 +55,9 @@ _CONN_TYPES = frozenset([
 _SCHEMES = frozenset(['https'])
 _PORTS = frozenset([443])
 
+_HEALTHY = 'healthy'
+_UNHEALTHY = f'un{_HEALTHY}'
+
 
 def _is_json(text):
     try:
@@ -124,6 +127,12 @@ def _problem_view(status: int, detail: str):
         content_type='application/problem+json')
 
 
+def _problem_invalid_content_type(content_type):
+    return _problem_view(
+        status=415,
+        detail=f'Content-Type \'{content_type}\' is not supported! Please use \'{_APPLICATION_JSON}\'')
+
+
 def _get_connection(conn_id, session):
     return session.query(Connection).filter_by(conn_id=conn_id).first()
 
@@ -133,23 +142,22 @@ def _get_connection(conn_id, session):
 def get_connections(session=None):
     method = request.method
     if method == _GET:
-        connections = session.query(Connection).all()
         return {
             _CONNECTIONS: [
-                _conn_to_dict(conn) for conn in connections
+                _conn_to_dict(conn) for conn in session.query(Connection).all()
             ]
         }
     elif method == _POST:
 
         # Check Content Type
-        if (content_type := request.content_type) != _APPLICATION_JSON:
-            return _problem_view(
-                status=415,
-                detail=f'Content-Type \'{content_type}\' is not supported! Please POST with \'{_APPLICATION_JSON}\'')
+        content_type = request.content_type
+        if content_type != _APPLICATION_JSON:
+            return _problem_invalid_content_type(content_type)
 
         # Validate request body for schema validity
         conn = ConnectionSchema().load(request.json)
-        if errors := conn.errors:
+        errors = conn.errors
+        if errors:
             return _problem_view(400, detail=str(errors))
         data = conn.data
         conn_id = data[_CONN_ID]
@@ -180,12 +188,13 @@ def get_connection(conn_id, session=None):
         return _no_content
     elif method == _PUT:
         # Check Content Type
-        if (content_type := request.content_type) != _APPLICATION_JSON:
-            return _problem_view(
-                status=415,
-                detail=f'Content-Type \'{content_type}\' is not supported! Please POST with \'{_APPLICATION_JSON}\'')
+        content_type = request.content_type
+        if content_type != _APPLICATION_JSON:
+            return _problem_invalid_content_type(content_type)
+
         conn = ConnectionSchema().load(request.json)
-        if errors := conn.errors:
+        errors = conn.errors
+        if errors:
             return _problem_view(400, detail=str(errors))
         if conn.data[_CONN_ID] != conn_id:
             return _problem_view(status=400, detail='Conn ID in request body does not agree with the one in path!')
@@ -203,11 +212,13 @@ def get_connection(conn_id, session=None):
 def get_health(session=None):
     try:
         session.execute('SELECT 1')
-        status = 'HEALTHY'
+        status = _HEALTHY
     except:
-        status = 'UNHEALTHY'
+        status = _UNHEALTHY
     return {
-        'status': status
+        'health': {
+            'status': status
+        }
     }
 
 
