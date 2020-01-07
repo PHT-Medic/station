@@ -67,7 +67,7 @@ def _is_json(text):
 
 
 _LOWERCASE = Regexp('^[a-z]+$')
-_CONN_ID_REGEX = re.compile('^[a-z](?:_?[a-z]+)*$')
+_CONN_ID_REGEX = re.compile('^[a-z](?:_?[a-z0-9]+)*$')
 
 
 # Schema.from_dict unfortunately not available in marshmallow<3.0.0
