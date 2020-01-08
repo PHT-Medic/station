@@ -1,12 +1,18 @@
 import json
 import re
 
-from airflow.models import Connection
-from airflow.utils.db import provide_session
-from flask import Flask, Response, request
-from marshmallow import Schema, fields
-from marshmallow.validate import Regexp, OneOf, ValidationError
-from werkzeug.http import HTTP_STATUS_CODES
+import airflow
+import airflow.utils.db
+import flask
+import marshmallow
+import marshmallow.validate
+import werkzeug
+
+from pht_trainlib.util import require_valid_hostname
+
+# Flask Responses
+_NO_CONTENT = flask.Response(status=204)
+
 
 _CONN_TYPES = frozenset([
     'docker',
@@ -63,23 +69,30 @@ def _is_json(text):
     try:
         json.loads(text)
     except json.decoder.JSONDecodeError:
-        raise ValidationError('text is not valid JSON')
+        raise marshmallow.validate.ValidationError('text is not valid JSON')
 
 
-_LOWERCASE = Regexp('^[a-z]+$')
+_LOWERCASE = marshmallow.validate.Regexp('^[a-z]+$')
 _CONN_ID_REGEX = re.compile('^[a-z](?:_?[a-z0-9]+)*$')
 
 
+def _validate_hostname(text):
+    try:
+        require_valid_hostname(text)
+    except ValueError:
+        raise marshmallow.validate.ValidationError(f'Not a valid hostname: \'{text}\'')
+
+
 # Schema.from_dict unfortunately not available in marshmallow<3.0.0
-class ConnectionSchema(Schema):
-    conn_id = fields.Str(validate=Regexp(_CONN_ID_REGEX), required=True)
-    conn_type = fields.Str(validate=OneOf(_CONN_TYPES), required=True)
-    host = fields.Str(validate=_LOWERCASE, required=True)
-    schema = fields.Str(OneOf(_SCHEMES), required=True)
-    login = fields.Str(validate=_LOWERCASE, required=True)
-    password = fields.Str()
-    port = fields.Int(validate=OneOf(_PORTS), required=True)
-    extra = fields.Str(validate=_is_json)
+class ConnectionSchema(marshmallow.Schema):
+    conn_id = marshmallow.fields.Str(validate=marshmallow.validate.Regexp(_CONN_ID_REGEX), required=True)
+    conn_type = marshmallow.fields.Str(validate=marshmallow.validate.OneOf(_CONN_TYPES), required=True)
+    host = marshmallow.fields.Str(validate=_validate_hostname, required=True)
+    schema = marshmallow.fields.Str(marshmallow.validate.OneOf(_SCHEMES), required=True)
+    login = marshmallow.fields.Str(validate=_LOWERCASE, required=True)
+    password = marshmallow.fields.Str()
+    port = marshmallow.fields.Int(validate=marshmallow.validate.OneOf(_PORTS), required=True)
+    extra = marshmallow.fields.Str(validate=_is_json)
 
 
 _CONN_ID = 'conn_id'
@@ -109,18 +122,16 @@ _GET = 'GET'
 _DELETE = 'DELETE'
 _APPLICATION_JSON = 'application/json'
 
-_created = Response(status=201)
-_no_content = Response(status=204)
 
-app = Flask(__name__)
+app = flask.Flask(__name__)
 
 
 def _problem_view(status: int, detail: str):
-    return Response(
+    return flask.Response(
         response=json.dumps({
             'detail': detail,
             'status': status,
-            'title': HTTP_STATUS_CODES[status],
+            'title': werkzeug.http.HTTP_STATUS_CODES[status],
             'type': 'about:blank'
         }),
         status=status,
@@ -134,28 +145,28 @@ def _problem_invalid_content_type(content_type):
 
 
 def _get_connection(conn_id, session):
-    return session.query(Connection).filter_by(conn_id=conn_id).first()
+    return session.query(airflow.models.Connection).filter_by(conn_id=conn_id).first()
 
 
 @app.route(f'/api/{_CONNECTIONS}', methods=[_GET, _POST])
-@provide_session
+@airflow.utils.db.provide_session
 def get_connections(session=None):
-    method = request.method
+    method = flask.request.method
     if method == _GET:
         return {
             _CONNECTIONS: [
-                _conn_to_dict(conn) for conn in session.query(Connection).all()
+                _conn_to_dict(conn) for conn in session.query(airflow.models.Connection).all()
             ]
         }
     elif method == _POST:
 
         # Check Content Type
-        content_type = request.content_type
+        content_type = flask.request.content_type
         if content_type != _APPLICATION_JSON:
             return _problem_invalid_content_type(content_type)
 
         # Validate request body for schema validity
-        conn = ConnectionSchema().load(request.json)
+        conn = ConnectionSchema().load(flask.request.json)
         errors = conn.errors
         if errors:
             return _problem_view(400, detail=str(errors))
@@ -163,16 +174,16 @@ def get_connections(session=None):
         conn_id = data[_CONN_ID]
         if _get_connection(conn_id, session):
             return _problem_view(409, detail=f'Conn ID \'{conn_id}\' already exist!')
-        conn = Connection(**data)
+        conn = airflow.models.Connection(**data)
         session.add(conn)
         # TODO Location Header of new resource not set yet
-        return Response(
+        return flask.Response(
             status=201,
             response=json.dumps(_conn_to_dict(conn)))
 
 
 @app.route(f'/api/{_CONNECTIONS}/<conn_id>', methods=[_GET, _DELETE, _PUT])
-@provide_session
+@airflow.utils.db.provide_session
 def get_connection(conn_id, session=None):
     if not _CONN_ID_REGEX.match(conn_id):
         return _problem_view(400, f'Not a valid Conn ID: \'{conn_id}\'')
@@ -180,19 +191,19 @@ def get_connection(conn_id, session=None):
     if not connection:
         return _problem_view(404, f'Connection: \'{conn_id}\' was not found')
 
-    method = request.method
+    method = flask.request.method
     if method == _GET:
         return _conn_to_dict(connection)
     elif method == _DELETE:
         session.delete(connection)
-        return _no_content
+        return _NO_CONTENT
     elif method == _PUT:
         # Check Content Type
-        content_type = request.content_type
+        content_type = flask.request.content_type
         if content_type != _APPLICATION_JSON:
             return _problem_invalid_content_type(content_type)
 
-        conn = ConnectionSchema().load(request.json)
+        conn = ConnectionSchema().load(flask.request.json)
         errors = conn.errors
         if errors:
             return _problem_view(400, detail=str(errors))
@@ -202,13 +213,13 @@ def get_connection(conn_id, session=None):
         for (key, value) in conn.data.items():
             setattr(connection, key, value)
         session.merge(connection)
-        return Response(
+        return flask.Response(
             status=200,
             response=json.dumps(_conn_to_dict(connection)))
 
 
 @app.route('/api/health', methods=[_GET])
-@provide_session
+@airflow.utils.db.provide_session
 def get_health(session=None):
     try:
         session.execute('SELECT 1')
