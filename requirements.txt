@@ -57,7 +57,7 @@ marshmallow-sqlalchemy==0.21.0
 numpy==1.18.1
 pandas==0.25.3
 pendulum==1.4.4
-pht-trainlib==0.5.1
+pht-trainlib==0.6.0
 prison==0.1.2
 psutil==5.6.7
 psycopg2==2.8.4
