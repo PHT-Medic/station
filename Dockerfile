@@ -40,6 +40,7 @@ RUN apt-get update -yqq \
         /usr/share/man \
         /usr/share/doc \
         /usr/share/doc-base && sync
+COPY dags ${AIRFLOW_USER_HOME}/dags
 COPY app.py /usr/local/
 COPY scripts/entrypoint.sh /entrypoint.sh
 COPY config/airflow.cfg ${AIRFLOW_USER_HOME}/airflow.cfg
