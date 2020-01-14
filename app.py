@@ -83,16 +83,16 @@ def _validate_hostname(text):
         raise marshmallow.validate.ValidationError(f'Not a valid hostname: \'{text}\'')
 
 
-# Schema.from_dict unfortunately not available in marshmallow<3.0.0
+# # Schema.from_dict unfortunately not available in marshmallow<3.0.0
 class ConnectionSchema(marshmallow.Schema):
     conn_id = marshmallow.fields.Str(validate=marshmallow.validate.Regexp(_CONN_ID_REGEX), required=True)
     conn_type = marshmallow.fields.Str(validate=marshmallow.validate.OneOf(_CONN_TYPES), required=True)
     host = marshmallow.fields.Str(validate=_validate_hostname, required=True)
-    schema = marshmallow.fields.Str(marshmallow.validate.OneOf(_SCHEMES), required=True)
-    login = marshmallow.fields.Str(validate=_LOWERCASE, required=True)
-    password = marshmallow.fields.Str()
-    port = marshmallow.fields.Int(validate=marshmallow.validate.OneOf(_PORTS), required=True)
-    extra = marshmallow.fields.Str(validate=_is_json)
+    schema = marshmallow.fields.Str(marshmallow.validate.OneOf(_SCHEMES), required=False)
+    login = marshmallow.fields.Str(validate=_LOWERCASE, required=False)
+    password = marshmallow.fields.Str(required=False)
+    port = marshmallow.fields.Int(validate=marshmallow.validate.OneOf(_PORTS), required=False)
+    extra = marshmallow.fields.Str(validate=_is_json, required=False)
 
 
 _CONN_ID = 'conn_id'
@@ -167,9 +167,11 @@ def get_connections(session=None):
 
         # Validate request body for schema validity
         conn = ConnectionSchema().load(flask.request.json)
-        errors = conn.errors
-        if errors:
-            return _problem_view(400, detail=str(errors))
+
+        # TODO Validation disabled
+        # errors = conn.errors
+        # if errors:
+        #     return _problem_view(400, detail=str(errors))
         data = conn.data
         conn_id = data[_CONN_ID]
         if _get_connection(conn_id, session):
@@ -204,9 +206,11 @@ def get_connection(conn_id, session=None):
             return _problem_invalid_content_type(content_type)
 
         conn = ConnectionSchema().load(flask.request.json)
-        errors = conn.errors
-        if errors:
-            return _problem_view(400, detail=str(errors))
+
+        # TODO Validation disabled
+        # errors = conn.errors
+        # if errors:
+        #     return _problem_view(400, detail=str(errors))
         if conn.data[_CONN_ID] != conn_id:
             return _problem_view(status=400, detail='Conn ID in request body does not agree with the one in path!')
 

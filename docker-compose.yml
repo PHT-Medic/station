@@ -20,6 +20,12 @@ services:
             - db
         ports:
             - 8081:8080
+    
+    redis:
+        image: redis:5.0.7-alpine3.11
+        restart: always
+        ports: 
+            - 6379:6379
 
     airflow:
         build: .
@@ -30,6 +36,7 @@ services:
             - POSTGRES_HOST=db
         depends_on:
           - db
+          - redis
         ports:
             - 4000:4000
             - 8080:8080

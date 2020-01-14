@@ -2,6 +2,7 @@ import datetime
 
 import airflow
 from airflow.operators.python_operator import PythonOperator
+from airflow.hooks.base_hook import BaseHook
 import docker
 
 
@@ -32,6 +33,8 @@ dag = airflow.DAG('inspect_endpoints', default_args=default_args, schedule_inter
 def _pull(**kwargs):
     # TODO Figure out where the client should be retrieved from
     print('hello world', flush=True)
+    print(kwargs, flush=True)
+    print('end of world', flush=True)
     # docker_ops.pull(
     #     client=docker.from_env(),
     #     repository=kwargs['repository'],
