@@ -1,5 +1,6 @@
 import json
 import re
+import typing
 
 import airflow
 import airflow.utils.db
@@ -10,10 +11,22 @@ import werkzeug
 
 from pht_trainlib.util import require_valid_hostname
 
+# String constants
+_CONN_ID = 'conn_id'
+_CONNECTIONS = 'connections'
+_POST = 'POST'
+_PUT = 'PUT'
+_GET = 'GET'
+_DELETE = 'DELETE'
+_APPLICATION_JSON = 'application/json'
+_HEALTHY = 'healthy'
+_UNHEALTHY = f'un{_HEALTHY}'
+
+
 # Flask Responses
 _NO_CONTENT = flask.Response(status=204)
 
-
+# conn_types supported by Apache Airflow
 _CONN_TYPES = frozenset([
     'docker',
     'fs',
@@ -61,9 +74,6 @@ _CONN_TYPES = frozenset([
 _SCHEMES = frozenset(['https'])
 _PORTS = frozenset([443])
 
-_HEALTHY = 'healthy'
-_UNHEALTHY = f'un{_HEALTHY}'
-
 
 def _is_json(text):
     try:
@@ -95,8 +105,7 @@ class ConnectionSchema(marshmallow.Schema):
     extra = marshmallow.fields.Str(validate=_is_json, required=False)
 
 
-_CONN_ID = 'conn_id'
-
+# Attributes returned for Connections
 # Password omitted on purpose
 _CONN_KEYS = frozenset([
     _CONN_ID,
@@ -108,19 +117,34 @@ _CONN_KEYS = frozenset([
     'extra'
 ])
 
+# Attributes returned for dags
+_DAG_KEYS = frozenset([
+    'dag_id',
+    'root_dag_id',
+    'is_paused',
+    'is_subdag',
+    'is_active',
+    'scheduler_lock',
+    'pickle_id',
+    'fileloc',
+    'owners',
+    'description',
+    'default_view'
+])
 
-def _conn_to_dict(conn):
+
+def _map_attrs(obj, attrs: typing.Iterable[str]):
     return {
-        key: getattr(conn, key) for key in _CONN_KEYS
+        key: getattr(obj, key) for key in attrs
     }
 
 
-_CONNECTIONS = 'connections'
-_POST = 'POST'
-_PUT = 'PUT'
-_GET = 'GET'
-_DELETE = 'DELETE'
-_APPLICATION_JSON = 'application/json'
+def _conn_to_dict(conn: airflow.models.Connection):
+    return _map_attrs(conn, _CONN_KEYS)
+
+
+def _dag_to_dict(dag: airflow.models.DagModel):
+    return _map_attrs(dag, _DAG_KEYS)
 
 
 app = flask.Flask(__name__)
@@ -220,6 +244,14 @@ def get_connection(conn_id, session=None):
         return flask.Response(
             status=200,
             response=json.dumps(_conn_to_dict(connection)))
+
+
+@app.route('/api/dags', methods=[_GET])
+@airflow.utils.db.provide_session
+def get_dags(session=None):
+    return {
+        'dags': [_dag_to_dict(dag) for dag in  session.query(airflow.models.DagModel).all()]
+    }
 
 
 @app.route('/api/health', methods=[_GET])
