@@ -250,7 +250,7 @@ def get_connection(conn_id, session=None):
 @airflow.utils.db.provide_session
 def get_dags(session=None):
     return {
-        'dags': [_dag_to_dict(dag) for dag in  session.query(airflow.models.DagModel).all()]
+        'dags': [_dag_to_dict(dag) for dag in session.query(airflow.models.DagModel).all()]
     }
 
 
