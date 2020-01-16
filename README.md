@@ -34,16 +34,38 @@ of this distribution are:
 
 ## Installation 
 
-* Install `Docker` and `Docker Compose`. 
-* Make sure that the ports listed above are available.
-* Edit the variable `sql_alchemy_conn` to reflect your Postgres configuration and make sure
+1. Install `Docker` and `Docker Compose`.
+2. Make sure that the ports listed above are available.
+3. Create the Docker volume for Postgres using:
+    ```shell script
+    docker volume create pgdata
+    ```
+4. Run:
+    ```shell script
+    docker-compose -f docker-compose-install.yml up -d
+    ```
+5. In your browser, go to `http://localhost:8081`:
+    1. Login using Postgres system, username: `postgres`, password: `postgres`
+    2. Create the database `airflow`
+    3. Run the following command for creating the user:
+        ```postgresql
+           CREATE USER airflow PASSWORD '<airflow_password>';
+        ```
+   4. Grant the user access to the database:
+        ```postgresql
+          GRANT ALL ON DATABASE airflow TO airflow;
+        ```
+6. Run:
+    ```shell script
+       docker-compose -f docker-compose-install.yml down -v --remove-orphans
+    ```
+7. Run `docker-compose pull`
+8. Run `docker-compose build --no-cache --pull` 
+9. Edit the variable `sql_alchemy_conn` in `config/airflow.cfg` to reflect your Postgres configuration and make sure
   that this is consistent with the `docker-compose.yml` file
-* Run `docker-compose build --no-cache --pull`
-* Run `docker-compose pull`
 
 ## Running Airflow
-
-Run `docker-compose up -d`. 
-
-Check that the logs do not contain any startup errors with  `docker-compose logs -f`.
-
+1. Run `docker-compose up -d`. 
+2. Check that the logs do not contain any startup errors with  `docker-compose logs -f`.
+3. Go to `http://localhost:8080` and check whether you can see the web frontend of Apache Airflow.
+4. Run the DAG `test_docker` to see whether DAGs generally have access to the Docker daemon.

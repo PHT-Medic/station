@@ -30,6 +30,8 @@ services:
     airflow:
         build: .
         restart: always
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
         environment:
             - LOAD_EX=n
             - EXECUTOR=Local

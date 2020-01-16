@@ -1,0 +1,22 @@
+version: '3.7'
+
+volumes:
+    pgdata:
+        external: true
+
+services:
+    db:
+        image: postgres:12.1-alpine
+        restart: always
+        volumes:
+            - pgdata:/var/lib/postgresql/data
+        ports:
+            - 5432:5432
+
+    adminer:
+        image: adminer:latest
+        restart: always
+        depends_on:
+            - db
+        ports:
+            - 8081:8080
