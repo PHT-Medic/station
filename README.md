@@ -69,3 +69,16 @@ of this distribution are:
 2. Check that the logs do not contain any startup errors with  `docker-compose logs -f`.
 3. Go to `http://localhost:8080` and check whether you can see the web frontend of Apache Airflow.
 4. Run the DAG `test_docker` to see whether DAGs generally have access to the Docker daemon.
+
+## Published Ports
+The following TCP ports are used by this application stack:
+
+Port | Service (Docker Compose) | Description
+-----|--------------------------|----------------------------------------
+4000 | `airflow`                | Something Airflow related. I don't know.
+5432 | `db`                     | Postgres DBMS
+5555 | `airflow`                | Something Airflow related. I don't know.
+6379 | `redis`                  | The Redis port
+8080 | `airflow`                | Airflow Web Interface
+8081 | `adminer`                | Adminer for database administration
+8793 | `airflow`                |  Something Airflow related. I don't know.
