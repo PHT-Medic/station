@@ -4,6 +4,11 @@ volumes:
     pgdata:
         external: true
 
+networks:
+  default:
+    external:
+      name: pht-station
+
 services:
     db:
         image: postgres:12.1-alpine

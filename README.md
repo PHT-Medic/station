@@ -35,16 +35,23 @@ of this distribution are:
 ## Installation 
 
 1. Install `Docker` and `Docker Compose`.
+
 2. Make sure that the ports listed above are available.
-3. Create the Docker volume for Postgres using:
+
+3. Create the Docker Network `pht-station` using:
+    ```shell script
+    docker network create pht-station
+    ```
+
+4. Create the Docker volume for Postgres using:
     ```shell script
     docker volume create pgdata
     ```
-4. Run:
+5. Run:
     ```shell script
     docker-compose -f docker-compose-install.yml up -d
     ```
-5. In your browser, go to `http://localhost:8081`:
+6. In your browser, go to `http://localhost:8081`:
     1. Login using Postgres system, username: `postgres`, password: `postgres`
     2. Create the database `airflow`
     3. Run the following command for creating the user:
@@ -55,14 +62,17 @@ of this distribution are:
         ```postgresql
           GRANT ALL ON DATABASE airflow TO airflow;
         ```
-6. Run:
+7. Run:
     ```shell script
        docker-compose -f docker-compose-install.yml down -v --remove-orphans
     ```
-7. Run `docker-compose pull`
-8. Run `docker-compose build --no-cache --pull` 
-9. Edit the variable `sql_alchemy_conn` in `config/airflow.cfg` to reflect your Postgres configuration and make sure
-  that this is consistent with the `docker-compose.yml` file
+   
+8. Run `docker-compose pull`
+
+9. Run `docker-compose build --no-cache --pull` 
+
+10. Edit the variable `sql_alchemy_conn` in `config/airflow.cfg` to reflect your Postgres configuration and make sure
+    that this is consistent with the `docker-compose.yml` file
 
 ## Running Airflow
 1. Run `docker-compose up -d`. 
