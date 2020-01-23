@@ -275,7 +275,7 @@ def get_dags(session=None):
     }
 
 
-@app.route('/api/dags/<dag_id>/dag_runs')
+@app.route('/api/dags/<dag_id>/dag_runs', methods=[_GET])
 @airflow.utils.db.provide_session
 def get_dag_runs(dag_id, session=None):
     dag_runs = session.query(airflow.models.DagRun).filter_by(dag_id=dag_id).all()
