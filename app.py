@@ -1,4 +1,6 @@
+import base64
 import json
+import pickle
 import re
 import typing
 
@@ -30,8 +32,12 @@ _UNHEALTHY = f'un{_HEALTHY}'
 # Flask Responses
 _NO_CONTENT = flask.Response(status=204)
 
-# conn_types supported by Apache Airflow
-_CONN_TYPES = frozenset([
+# Other constant values
+_JSON_SEPS = (',', ':')
+
+
+# conn_types supported by Apache Airflow, used for validation
+_CONN_TYPES = (
     'docker',
     'fs',
     'ftp',
@@ -72,11 +78,14 @@ _CONN_TYPES = frozenset([
     'mongo',
     'gcpcloudsql',
     'grpc'
-])
+)
 
 
 _SCHEMES = frozenset(['https'])
 _PORTS = frozenset([443])
+
+
+_ENCODING = 'utf-8'
 
 
 def _is_json(text):
@@ -109,9 +118,43 @@ class ConnectionSchema(marshmallow.Schema):
     extra = marshmallow.fields.Str(validate=_is_json, required=False)
 
 
-# Attributes returned for Connections
-# Password omitted on purpose
-_CONN_KEYS = frozenset([
+def _encode_obj(obj) -> str:
+    return base64.standard_b64encode(pickle.dumps(obj)).decode(_ENCODING)
+
+
+class Mapper:
+    def __init__(self, items):
+        self._items = tuple(items)
+
+    def __call__(self, *args, **kwargs):
+        arg = args[0]
+        if isinstance(arg, typing.Iterable):
+            result = self._map_all(arg)
+        else:
+            result = self._map(arg)
+        return result
+
+    @staticmethod
+    def _identity(x):
+        return x
+
+    def _map(self, obj):
+        result = {}
+        for attr in self._items:
+            if isinstance(attr, typing.Sequence) and len(attr) == 2 and not isinstance(attr, str):
+                key = attr[0]
+                f = attr[1]
+            else:
+                key = attr
+                f = self._identity
+            result[key] = f(getattr(obj, key))
+        return result
+
+    def _map_all(self, objs):
+        yield from (self._map(obj) for obj in objs)
+
+
+_map_conn = Mapper([
     _CONN_ID,
     'conn_type',
     'host',
@@ -121,8 +164,7 @@ _CONN_KEYS = frozenset([
     'extra'
 ])
 
-# Attributes returned for dags
-_DAG_KEYS = frozenset([
+_map_dag = Mapper([
     _DAG_ID,
     _ROOT_DAG_ID,
     'is_paused',
@@ -136,7 +178,7 @@ _DAG_KEYS = frozenset([
     'default_view'
 ])
 
-_DAG_RUN_KEYS = frozenset([
+_map_dag_run = Mapper([
     'id',
     _DAG_ID,
     'execution_date',
@@ -145,26 +187,8 @@ _DAG_RUN_KEYS = frozenset([
     'state',
     'run_id',
     'external_trigger',
-    'conf'
+    ('conf', _encode_obj)
 ])
-
-
-def _map_attrs(obj, attrs: typing.Iterable[str]):
-    return {
-        key: getattr(obj, key) for key in attrs
-    }
-
-
-def _conn_to_dict(conn: airflow.models.Connection):
-    return _map_attrs(conn, _CONN_KEYS)
-
-
-def _dag_to_dict(dag: airflow.models.DagModel):
-    return _map_attrs(dag, _DAG_KEYS)
-
-
-def _dag_run_to_dict(dag_run: airflow.models.DagRun):
-    return _map_attrs(dag_run, _DAG_RUN_KEYS)
 
 
 app = flask.Flask(__name__)
@@ -198,9 +222,7 @@ def get_connections(session=None):
     method = flask.request.method
     if method == _GET:
         return {
-            _CONNECTIONS: [
-                _conn_to_dict(conn) for conn in session.query(airflow.models.Connection).all()
-            ]
+            _CONNECTIONS: list(_map_conn(session.query(airflow.models.Connection).all()))
         }
     elif method == _POST:
 
@@ -225,7 +247,7 @@ def get_connections(session=None):
         # TODO Location Header of new resource not set yet
         return flask.Response(
             status=201,
-            response=json.dumps(_conn_to_dict(conn)))
+            response=json.dumps(_map_conn(conn)))
 
 
 @app.route(f'/api/{_CONNECTIONS}/<conn_id>', methods=[_GET, _DELETE, _PUT])
@@ -239,7 +261,7 @@ def get_connection(conn_id, session=None):
 
     method = flask.request.method
     if method == _GET:
-        return _conn_to_dict(connection)
+        return _map_conn(connection)
     elif method == _DELETE:
         session.delete(connection)
         return _NO_CONTENT
@@ -263,7 +285,7 @@ def get_connection(conn_id, session=None):
         session.merge(connection)
         return flask.Response(
             status=200,
-            response=json.dumps(_conn_to_dict(connection)))
+            response=json.dumps(_map_conn(connection)))
 
 
 @app.route('/api/dags', methods=[_GET])
@@ -271,7 +293,7 @@ def get_connection(conn_id, session=None):
 def get_dags(session=None):
     dags = session.query(airflow.models.DagModel).all()
     return {
-        'dags': [_dag_to_dict(dag) for dag in dags]
+        'dags': list(_map_dag(dags))
     }
 
 
@@ -280,7 +302,7 @@ def get_dags(session=None):
 def get_dag_runs(dag_id, session=None):
     dag_runs = session.query(airflow.models.DagRun).filter_by(dag_id=dag_id).all()
     return {
-        _DAG_RUNS: [_dag_run_to_dict(dag_run) for dag_run in dag_runs]
+        _DAG_RUNS: list(_map_dag_run(dag_runs))
     }
 
 

@@ -6,10 +6,10 @@ ENV DEBIAN_FRONTEND noninteractive
 ENV TERM linux
 
 # Airflow
-ARG AIRFLOW_USER_HOME=/usr/local/airflow
+ENV AIRFLOW_USER_HOME=/usr/local/airflow
 ENV AIRFLOW_HOME=${AIRFLOW_USER_HOME}
 
-# Define en_US.
+# Define locales
 ENV LANGUAGE en_US.UTF-8
 ENV LANG en_US.UTF-8
 ENV LC_ALL en_US.UTF-8
@@ -18,7 +18,7 @@ ENV LC_MESSAGES en_US.UTF-8
 
 COPY requirements.txt /tmp/
 RUN apt-get update -yqq \
-    && apt-get upgrade -yqq \
+    && apt-get dist-upgrade -yqq \
     && apt-get install -yqq --no-install-recommends --no-install-suggests \
         libpq-dev \
         build-essential \
