@@ -12,7 +12,11 @@ import werkzeug
 from pht_trainlib.util import require_valid_hostname
 
 # String constants
+_DAG = 'dag'
+_DAG_RUNS = f'{_DAG}_runs'
 _CONN_ID = 'conn_id'
+_DAG_ID = f'{_DAG}_id'
+_ROOT_DAG_ID = f'root_{_DAG_ID}'
 _CONNECTIONS = 'connections'
 _POST = 'POST'
 _PUT = 'PUT'
@@ -119,8 +123,8 @@ _CONN_KEYS = frozenset([
 
 # Attributes returned for dags
 _DAG_KEYS = frozenset([
-    'dag_id',
-    'root_dag_id',
+    _DAG_ID,
+    _ROOT_DAG_ID,
     'is_paused',
     'is_subdag',
     'is_active',
@@ -130,6 +134,18 @@ _DAG_KEYS = frozenset([
     'owners',
     'description',
     'default_view'
+])
+
+_DAG_RUN_KEYS = frozenset([
+    'id',
+    _DAG_ID,
+    'execution_date',
+    'start_date',
+    'end_date',
+    'state',
+    'run_id',
+    'external_trigger',
+    'conf'
 ])
 
 
@@ -145,6 +161,10 @@ def _conn_to_dict(conn: airflow.models.Connection):
 
 def _dag_to_dict(dag: airflow.models.DagModel):
     return _map_attrs(dag, _DAG_KEYS)
+
+
+def _dag_run_to_dict(dag_run: airflow.models.DagRun):
+    return _map_attrs(dag_run, _DAG_RUN_KEYS)
 
 
 app = flask.Flask(__name__)
@@ -249,8 +269,18 @@ def get_connection(conn_id, session=None):
 @app.route('/api/dags', methods=[_GET])
 @airflow.utils.db.provide_session
 def get_dags(session=None):
+    dags = session.query(airflow.models.DagModel).all()
     return {
-        'dags': [_dag_to_dict(dag) for dag in session.query(airflow.models.DagModel).all()]
+        'dags': [_dag_to_dict(dag) for dag in dags]
+    }
+
+
+@app.route('/api/dags/<dag_id>/dag_runs')
+@airflow.utils.db.provide_session
+def get_dag_runs(dag_id, session=None):
+    dag_runs = session.query(airflow.models.DagRun).filter_by(dag_id=dag_id).all()
+    return {
+        _DAG_RUNS: [_dag_run_to_dict(dag_run) for dag_run in dag_runs]
     }
 
 
