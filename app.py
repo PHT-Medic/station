@@ -306,6 +306,15 @@ def get_dag_runs(dag_id, session=None):
     }
 
 
+@app.route('/api/dag_runs', methods=[_GET])
+@airflow.utils.db.provide_session
+def get_all_dag_runs(session=None):
+    dag_runs = session.query(airflow.models.DagRun).all()
+    return {
+        _DAG_RUNS: list(_map_dag_run(dag_runs))
+    }
+
+
 @app.route('/api/health', methods=[_GET])
 @airflow.utils.db.provide_session
 def get_health(session=None):
