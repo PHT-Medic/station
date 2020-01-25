@@ -1,7 +1,10 @@
+"""
+This is a DAG which just fails. Used for testing.
+"""
 import datetime
 
 import airflow
-from airflow.operators.docker_operator import DockerOperator
+from airflow.operators.python_operator import PythonOperator
 
 default_args = {
     'owner': 'Airflow',
@@ -19,11 +22,15 @@ default_args = {
     # 'end_date': datetime(2016, 1, 1),
 }
 
-dag = airflow.DAG(dag_id='test_docker', default_args=default_args, schedule_interval=None)
+dag = airflow.DAG(dag_id='test_fail', default_args=default_args, schedule_interval=None)
 
 
-DockerOperator(
-    image='alpine',
-    command='echo hello world'.split(),
-    task_id='test_docker',
+def _fail(**kwargs):
+    raise AssertionError('This is supposed to happen!')
+
+
+PythonOperator(
+    python_callable=_fail,
+    provide_context=True,
+    task_id='_fail',
     dag=dag)

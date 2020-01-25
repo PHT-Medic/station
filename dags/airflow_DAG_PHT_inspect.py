@@ -27,7 +27,7 @@ default_args = {
     # 'end_date': datetime(2016, 1, 1),
 }
 
-dag = airflow.DAG('inspect_endpoints', default_args=default_args, schedule_interval=None)
+dag = airflow.DAG(dag_id='inspect', default_args=default_args, schedule_interval=None)
 
 
 def _pull(**kwargs):
