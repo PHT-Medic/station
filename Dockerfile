@@ -28,7 +28,7 @@ RUN apt-get update -yqq \
     && sed -i 's/^# en_US.UTF-8 UTF-8$/en_US.UTF-8 UTF-8/g' /etc/locale.gen \
     && locale-gen \
     && update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 \
-    && pip install --extra-index-url 'https://pypiserver.lukaszimmermann.dev' --no-cache-dir -r /tmp/requirements.txt \
+    && pip install --no-cache-dir -r /tmp/requirements.txt \
     && apt-get purge --auto-remove -yqq \
         build-essential \
     && apt-get autoremove -yqq --purge \

@@ -1,0 +1,17 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[[source]]
+url = "https://pypiserver.lukaszimmermann.dev/simple"
+verify_ssl = true
+name = "pypiserver"
+
+[packages]
+apache-airflow = {version = "*", extras = ["celery","password","redis","postgres"]}
+pht-trainlib = "*"
+
+[requires]
+python_version = "3.7"
+
