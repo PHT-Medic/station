@@ -15,6 +15,7 @@ from pht_trainlib.util import require_valid_hostname
 
 # String constants
 _DAG = 'dag'
+_DAGS = f'{_DAG}s'
 _DAG_RUNS = f'{_DAG}_runs'
 _CONN_ID = 'conn_id'
 _DAG_ID = f'{_DAG}_id'
@@ -123,6 +124,9 @@ def _encode_obj(obj) -> str:
 
 
 class Mapper:
+    """
+    Maps an object to a dictionary with keys specified by items
+    """
     def __init__(self, items):
         self._items = tuple(items)
 
@@ -216,16 +220,25 @@ def _get_connection(conn_id, session):
     return session.query(airflow.models.Connection).filter_by(conn_id=conn_id).first()
 
 
-@app.route(f'/api/{_CONNECTIONS}', methods=[_GET, _POST])
+def _get_all_connections(session):
+    return session.query(airflow.models.Connection).all()
+
+
+@app.route(f'/api/{_CONNECTIONS}', methods=[_GET, _POST, _DELETE])
 @airflow.utils.db.provide_session
-def get_connections(session=None):
+def connections(session=None):
     method = flask.request.method
     if method == _GET:
         return {
-            _CONNECTIONS: list(_map_conn(session.query(airflow.models.Connection).all()))
+            _CONNECTIONS: list(_map_conn(_get_all_connections(session)))
         }
-    elif method == _POST:
 
+    elif method == _DELETE:
+        for conn in _get_all_connections(session):
+            session.delete(conn)
+        return _NO_CONTENT
+
+    elif method == _POST:
         # Check Content Type
         content_type = flask.request.content_type
         if content_type != _APPLICATION_JSON:
@@ -288,16 +301,16 @@ def get_connection(conn_id, session=None):
             response=json.dumps(_map_conn(connection)))
 
 
-@app.route('/api/dags', methods=[_GET])
+@app.route(f'/api/{_DAGS}', methods=[_GET])
 @airflow.utils.db.provide_session
 def get_dags(session=None):
     dags = session.query(airflow.models.DagModel).all()
     return {
-        'dags': list(_map_dag(dags))
+        _DAGS: list(_map_dag(dags))
     }
 
 
-@app.route('/api/dags/<dag_id>/dag_runs', methods=[_GET])
+@app.route(f'/api/{_DAGS}/<dag_id>/{_DAG_RUNS}', methods=[_GET])
 @airflow.utils.db.provide_session
 def get_dag_runs(dag_id, session=None):
     dag_runs = session.query(airflow.models.DagRun).filter_by(dag_id=dag_id).all()
@@ -306,7 +319,7 @@ def get_dag_runs(dag_id, session=None):
     }
 
 
-@app.route('/api/dag_runs', methods=[_GET])
+@app.route(f'/api/{_DAG_RUNS}', methods=[_GET])
 @airflow.utils.db.provide_session
 def get_all_dag_runs(session=None):
     dag_runs = session.query(airflow.models.DagRun).all()

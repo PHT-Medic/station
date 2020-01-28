@@ -1,5 +1,6 @@
 FROM python:3.7.6-slim-buster
 
+EXPOSE 4000 8080 5555 8793
 SHELL [ "/bin/bash", "-euo", "pipefail", "-c" ]
 
 ENV DEBIAN_FRONTEND noninteractive
@@ -40,12 +41,10 @@ RUN apt-get update -yqq \
         /usr/share/man \
         /usr/share/doc \
         /usr/share/doc-base && sync
-COPY dags ${AIRFLOW_USER_HOME}/dags
 COPY app.py /usr/local/
 COPY scripts/entrypoint.sh /entrypoint.sh
 COPY config/airflow.cfg ${AIRFLOW_USER_HOME}/airflow.cfg
-
-EXPOSE 4000 8080 5555 8793
+COPY dags ${AIRFLOW_USER_HOME}/dags
 
 WORKDIR ${AIRFLOW_USER_HOME}
 ENTRYPOINT ["/entrypoint.sh"]

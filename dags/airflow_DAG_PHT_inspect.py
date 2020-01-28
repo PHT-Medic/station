@@ -30,15 +30,26 @@ default_args = {
 dag = airflow.DAG(dag_id='inspect', default_args=default_args, schedule_interval=None)
 
 
-def _pull(**kwargs):
-    # TODO Figure out where the client should be retrieved from
-    print('hello world', flush=True)
-    print(kwargs, flush=True)
-    print('end of world', flush=True)
-    # docker_ops.pull(
-    #     client=docker.from_env(),
-    #     repository=kwargs['repository'],
-    #     tag=kwargs['tag'])
+def get_docker_connection(station_id):
+    return BaseHook.get_connection(f'pht_station_{station_id}_container_registry_docker')
+
+
+def _pull(**context):
+    """
+    Pulls the train image for extracting the meta data from it.
+    """
+    params = context['params']
+    repo = params['repository']
+    tag = params['tag']
+    station_id = params['station_id']
+    cr = get_docker_connection(station_id)
+    image = cr.host + '/' + repo
+    print(f'Repository: {repo}', flush=True)
+    pull_result = docker_ops.pull(
+        client=docker.from_env(),
+        repository=image,
+        tag=tag)
+    print(f'pull_result: {pull_result}', flush=True)
 
 
 PythonOperator(
