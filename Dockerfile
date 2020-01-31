@@ -41,11 +41,10 @@ RUN apt-get update -yqq \
         /usr/share/man \
         /usr/share/doc \
         /usr/share/doc-base && sync
-COPY app.py /usr/local/
-COPY scripts/entrypoint.sh /entrypoint.sh
+COPY app.py scripts/entrypoint.sh scripts/setup_connections.py /usr/local/
 COPY config/airflow.cfg ${AIRFLOW_USER_HOME}/airflow.cfg
 COPY dags ${AIRFLOW_USER_HOME}/dags
 
 WORKDIR ${AIRFLOW_USER_HOME}
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/usr/local/entrypoint.sh"]
 CMD ["webserver"]

@@ -42,6 +42,9 @@ services:
             - LOAD_EX=n
             - EXECUTOR=Local
             - POSTGRES_HOST=db
+            - PHT_STATION_API_HOSTNAME=station
+            - PHT_STATION_API_PORT=8082
+            - PHT_STATION_REGISTY_HOSTNAME=harbor.lukaszimmermann.dev
         depends_on:
           - db
           - redis

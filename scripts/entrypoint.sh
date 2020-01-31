@@ -76,13 +76,15 @@ if [ "$AIRFLOW__CORE__EXECUTOR" = "CeleryExecutor" ]; then
   wait_for_port "Redis" "$REDIS_HOST" "$REDIS_PORT"
 fi
 
+python /usr/local/app.py &
 case "$1" in
   webserver)
-    airflow initdb
+      airflow initdb
+      python /usr/local/setup_connections.py
+
     if [ "$AIRFLOW__CORE__EXECUTOR" = "LocalExecutor" ] || [ "$AIRFLOW__CORE__EXECUTOR" = "SequentialExecutor" ]; then
       # With the "Local" and "Sequential" executors it should all run in one container.
       airflow scheduler &
-      python /usr/local/app.py &
     fi
     exec airflow webserver
     ;;

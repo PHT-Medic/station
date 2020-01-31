@@ -11,7 +11,7 @@ name = "pypiserver"
 [packages]
 apache-airflow = {version = "*", extras = ["celery","password","redis","postgres"]}
 pht-trainlib = "*"
+requests = "*"
 
 [requires]
 python_version = "3.7"
-

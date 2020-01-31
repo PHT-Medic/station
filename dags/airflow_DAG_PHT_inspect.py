@@ -3,8 +3,6 @@ import datetime
 import airflow
 from airflow.operators.python_operator import PythonOperator
 from airflow.hooks.base_hook import BaseHook
-import docker
-
 
 import pht_trainlib.docker_ops as docker_ops
 
@@ -30,30 +28,61 @@ default_args = {
 dag = airflow.DAG(dag_id='inspect', default_args=default_args, schedule_interval=None)
 
 
-def get_docker_connection(station_id):
-    return BaseHook.get_connection(f'pht_station_{station_id}_container_registry_docker')
+def get_params(context):
+    params = context['params']
+    return params['repository'], params['tag'], params['station_id'], params['tracker_id']
 
 
-def _pull(**context):
+def get_container_registry():
+    return BaseHook.get_connection('pht_station_all_docker_container_registry')
+
+
+def get_tracker(station_id, tracker_id):
+    conn = BaseHook.get_connection(f'pht_station_{station_id}_http_station_api')
+    host, port, schema = conn.host, conn.port, conn.schema
+
+
+
+##
+# Python Operator
+##
+
+def pull(**context):
     """
     Pulls the train image for extracting the meta data from it.
     """
-    params = context['params']
-    repo = params['repository']
-    tag = params['tag']
-    station_id = params['station_id']
-    cr = get_docker_connection(station_id)
-    image = cr.host + '/' + repo
-    print(f'Repository: {repo}', flush=True)
+    repo, tag, station_id, __ = get_params(context)
+    registry = get_container_registry()
     pull_result = docker_ops.pull(
-        client=docker.from_env(),
-        repository=image,
+        repository=registry.host + '/' + repo,
         tag=tag)
-    print(f'pull_result: {pull_result}', flush=True)
+    return pull_result.attrs['Id']
 
 
-PythonOperator(
-    python_callable=_pull,
+def verify_fs_layer(**context):
+    """
+    Verifies that the FSLayers of the pulled image are the one expected using the tracker
+    """
+    image_id = context['task_instance'].xcom_pull(task_ids='pull')
+    __, __, station_id, tracker_id = get_params(context)
+    tracker = get_tracker(station_id, tracker_id)
+
+
+    # print(image_id, flush=True)
+    # print(tracker_id, flush=True)
+    # print('-------------------------------------------------------------------------', flush=True)
+
+
+t1 = PythonOperator(
+    python_callable=pull,
     provide_context=True,
-    task_id='pull_image',
+    task_id='pull',
     dag=dag)
+
+t2 = PythonOperator(
+    python_callable=verify_fs_layer,
+    provide_context=True,
+    task_id='verify_fs_layer',
+    dag=dag)
+
+t1 >> t2
