@@ -7,7 +7,6 @@ volumes:
 services:
     db:
         image: postgres:12.1-alpine
-        restart: always
         volumes:
             - pgdata:/var/lib/postgresql/data
         ports:
@@ -15,7 +14,6 @@ services:
 
     adminer:
         image: adminer:latest
-        restart: always
         depends_on:
             - db
         ports:

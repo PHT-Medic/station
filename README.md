@@ -13,9 +13,9 @@ Python module is not going to be installed. We try to fix this ASAP.
 This is an [Apache Airflow](https://airflow.apache.org/) distribution for the PHT Station. Some notable properties
 of this distribution are:
 
-* This Airflow distribution comes bundled with Postgres via `docker-compose`. This is the recommended DBMS
+* This Airflow distribution comes bundled with PostgreSQL via `docker-compose`. This is the recommended DBMS
   for the PHT Station.
-* The used Executor is the `LocalExecutor`.  We **plan** to also support `CeleryExecutor` in the future.
+* The used Executor is the `LocalExecutor`.  We **plan** to also support `CeleryExecutor` in the future, but this is currently not the case.
 * This distribution comes with an additional HTTP service, exposed on the Airflow container on port 4000.
   This is supposed to be a temporary solution until Apache Airflow 2 is released, which will have an
   [overhauled REST API](https://cwiki.apache.org/confluence/display/AIRFLOW/Airflow+2.0). 
@@ -54,11 +54,11 @@ of this distribution are:
 6. In your browser, go to `http://localhost:8081`:
     1. Login using Postgres system, username: `postgres`, password: `postgres`
     2. Create the database `airflow`
-    3. Run the following command for creating the user:
+    3. Run the following SQL query for creating the user:
         ```postgresql
            CREATE USER airflow PASSWORD '<airflow_password>';
         ```
-   4. Grant the user access to the database:
+   4. Grant the user access to the database via this SQL query:
         ```postgresql
           GRANT ALL ON DATABASE airflow TO airflow;
         ```
