@@ -1,2 +1,4 @@
 .idea
 docker-compose_bak.yml
+**/__pycache__
+rebuild.sh

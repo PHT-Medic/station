@@ -26,11 +26,11 @@ services:
             - db
         ports:
             - 8081:8080
-    
+
     redis:
         image: redis:5.0.7-alpine3.11
         restart: always
-        ports: 
+        ports:
             - 6379:6379
 
     airflow:
@@ -38,13 +38,17 @@ services:
         restart: always
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
+            - ./templates:/usr/local/airflow/plugins/templates
+            - ./pht_station:/opt/pythonpath/pht_station
         environment:
+            # We do not load the example dags
             - LOAD_EX=n
             - EXECUTOR=Local
             - POSTGRES_HOST=db
             - PHT_STATION_API_HOSTNAME=station
             - PHT_STATION_API_PORT=8082
             - PHT_STATION_REGISTY_HOSTNAME=harbor.lukaszimmermann.dev
+            - PYTHONPATH=/opt/pythonpath
         depends_on:
           - db
           - redis

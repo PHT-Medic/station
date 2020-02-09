@@ -1,0 +1,32 @@
+{% extends "airflow/master.html" %}
+
+{% block title %}PHT Tracker{% endblock %}
+
+{% block head_css %}
+{{ super() }}
+<link href="{{ url_for("static", filename="dataTables.bootstrap.css") }}" rel="stylesheet" type="text/css" >
+<link href="{{ url_for("static", filename="bootstrap-toggle.min.css") }}" rel="stylesheet" type="text/css">
+{% endblock %}
+
+{% block body %}
+  <h2>Repositories</h2>
+
+  <div id="main_content">
+    <div class="row">
+      <div class="col-sm-2">
+      </div>
+      <div class="col-sm-10">
+      </div>
+    </div>
+        Hello World
+  </div>
+
+{% endblock %}
+
+{% block tail %}
+  {{ super() }}
+  <script src="{{ url_for('static', filename='d3.v3.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='jquery.dataTables.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='bootstrap-toggle.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='bootstrap3-typeahead.min.js') }}"></script>
+{% endblock %}

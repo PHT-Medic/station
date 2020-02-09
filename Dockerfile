@@ -44,6 +44,8 @@ RUN apt-get update -yqq \
 COPY app.py scripts/entrypoint.sh scripts/setup_connections.py /usr/local/
 COPY config/airflow.cfg ${AIRFLOW_USER_HOME}/airflow.cfg
 COPY dags ${AIRFLOW_USER_HOME}/dags
+COPY templates ${AIRFLOW_USER_HOME}/plugins/templates
+COPY plugin.py ${AIRFLOW_USER_HOME}/plugins/
 
 WORKDIR ${AIRFLOW_USER_HOME}
 ENTRYPOINT ["/usr/local/entrypoint.sh"]
