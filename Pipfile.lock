@@ -514,10 +514,10 @@
         },
         "marshmallow-sqlalchemy": {
             "hashes": [
-                "sha256:0d72beaf777f8b420c4dc94684252ae0e0a79556ccc4128129d2588f9ff72888",
-                "sha256:93fd8fad2b33d92a1ae58328eeb0f39ed174858d82f9e7084a174df7b41fd3a4"
+                "sha256:a370e247216e1a005277d92079d2f0d8d5b0a70fba68ee645730f6a1200991d1",
+                "sha256:f3155e87717e3a52def3a177b4022fd0500e71f626cbb0672adcb95588a99aa3"
             ],
-            "version": "==0.21.0"
+            "version": "==0.22.2"
         },
         "mypy-extensions": {
             "hashes": [
@@ -591,10 +591,10 @@
         },
         "pht-trainlib": {
             "hashes": [
-                "sha256:cf743f5fe62e20f658d91b6a4139af3537d0b8edca5f36994df9b0dc12fb8de3"
+                "sha256:556686de83ca7b5df881eb8d7f0a11b9d38a2f7336c9c2d9683ac6b8338b8d4c"
             ],
             "index": "pypi",
-            "version": "==0.14.0"
+            "version": "==0.15.0"
         },
         "prison": {
             "hashes": [

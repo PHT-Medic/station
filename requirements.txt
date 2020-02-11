@@ -56,13 +56,13 @@ markdown==2.6.11
 markupsafe==1.1.1
 marshmallow-dataclass==0.6.6
 marshmallow-enum==1.5.1
-marshmallow-sqlalchemy==0.21.0
+marshmallow-sqlalchemy==0.22.2
 marshmallow==2.19.5
 mypy-extensions==0.4.3
 numpy==1.18.1
 pandas==0.25.3
 pendulum==1.4.4
-pht-trainlib==0.14.0
+pht-trainlib==0.15.0
 prison==0.1.2
 psutil==5.6.7
 psycopg2-binary==2.8.4

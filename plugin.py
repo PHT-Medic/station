@@ -40,18 +40,16 @@ _NO_CONTENT = flask.Response(status=204)
 # templates
 _template_registry = f'{_plugin_name}/registry.html'
 _template_executions = f'{_plugin_name}/executions.html'
+_template_resources = f'{_plugin_name}/resources.html'
 
 
 class Registry(BaseView):
+    """
+    View used to list all the tran
+    """
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self._repo_client = create_repo_client(Harbor(base_url='https://harbor.lukaszimmermann.dev'))
-
-    # @expose('/api/tags', methods=['GET'])
-    # def get_tags(self):
-    #     return flask.Response(status=209, response=json.dumps({
-    #         'foo': 'bar'
-    #     }))
 
     ###############################################################
     # Views
@@ -79,12 +77,6 @@ class Registry(BaseView):
 
 class Executions(BaseView):
 
-    # @expose('/api/tags', methods=['GET'])
-    # def get_tags(self):
-    #     return flask.Response(status=209, response=json.dumps({
-    #         'foo': 'bar'
-    #     }))
-
     ###############################################################
     # Views
     ###############################################################
@@ -94,29 +86,28 @@ class Executions(BaseView):
 
     @expose('/api/execute', methods=['POST'])
     def post_execution(self):
-        print('foo', flush=True)
         body = flask.request.json()
-        print(body, flush=True)
         return _NO_CONTENT
 
+
+class Resources(BaseView):
+    """
+    The view for the Station to manage the Resources that it can provide to trains
+    """
     ###############################################################
-    # API
+    # Views
     ###############################################################
-    # @expose('/api/repository')
-    # def get_repository(self):
-    #     return {
-    #         'repositories': convert_to_serializable(self._repo_client.repositories())
-    #     }
-    #
-    # @expose('/api/repository/<path:repo_name>/tag')
-    # def get_tag(self, repo_name):
-    #     return {
-    #         'tags': convert_to_serializable(self._repo_client.tags(repo_name))
-    #     }
+    @expose('/')
+    def resources(self):
+        return self.render(_template_resources)
+
+    def volumes(self):
+        pass
 
 
 registry_view = Registry(category=_category, name='Registry')
 executions_view = Executions(category=_category, name='Executions')
+resources_view = Resources(category=_category, name='Resources')
 
 # Creating a flask blueprint to integrate the templates and static folder
 bp = flask.Blueprint(
@@ -152,7 +143,7 @@ bp = flask.Blueprint(
 
 class AirflowTestPlugin(AirflowPlugin):
     name = 'pht_station'
-    admin_views = [registry_view, executions_view]
+    admin_views = [registry_view, executions_view, resources_view]
     flask_blueprints = [bp]
     menu_links = []
     appbuilder_views = []
