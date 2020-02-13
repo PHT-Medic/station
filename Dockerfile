@@ -10,6 +10,9 @@ ENV TERM linux
 ENV AIRFLOW_USER_HOME=/usr/local/airflow
 ENV AIRFLOW_HOME=${AIRFLOW_USER_HOME}
 
+# For PHT
+ENV PHT_STATION_AIRFLOW_STATIC=/usr/local/lib/python3.7/site-packages/airflow/www/static
+
 # Define locales
 ENV LANGUAGE en_US.UTF-8
 ENV LANG en_US.UTF-8
@@ -30,6 +33,15 @@ RUN apt-get update -yqq \
     && locale-gen \
     && update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 \
     && pip install --compile --no-cache-dir -r /tmp/requirements.txt \
+    # Make some Airflow static assets available to the PHT Station plugin
+    && mkdir -p ${AIRFLOW_USER_HOME}/plugins/static/ \
+    && cp ${PHT_STATION_AIRFLOW_STATIC}/sort_both.png \
+          ${AIRFLOW_USER_HOME}/plugins/static/ \
+    && cp ${PHT_STATION_AIRFLOW_STATIC}/sort_asc.png \
+          ${AIRFLOW_USER_HOME}/plugins/static/ \
+    && cp ${PHT_STATION_AIRFLOW_STATIC}/sort_desc.png \
+          ${AIRFLOW_USER_HOME}/plugins/static/ \
+    # Image cleanup
     && apt-get purge --auto-remove -yqq \
         build-essential \
     && apt-get autoremove -yqq --purge \

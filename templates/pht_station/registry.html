@@ -64,23 +64,32 @@
   <script src="{{ url_for('static', filename='bootstrap-toggle.min.js') }}"></script>
   <script src="{{ url_for('static', filename='bootstrap3-typeahead.min.js') }}"></script>
     <script>
+    // TODO Refactor
     let selectedRepo = undefined;
-    $(document).ready(() => {
-      const repos_table = $('#pht_station_repositories').DataTable();
+    $(function(){
+      const repos_table = $('#pht_station_repositories').DataTable({ select: true });
       let tags_table = $('#pht_station_tags').DataTable();
       tags_table.on('draw.dt', function () {
             tags_table.rows().every( function ( rowIdx, tableLoop, rowLoop ) {
                 const {name, digest} = this.data();
-                const columns = this.node().childNodes;
-                const links = columns[columns.length-1];
-                links.innerHTML = `<a href="{{ url_for('executions.post_execution')}}"
-                   onclick="return confirmTriggerDag('${name}', '${digest}')">
-                    <span class="glyphicon glyphicon-play-circle" aria-hidden="true" data-original-title="Trigger Dag"></span>
+                const links = this.node().lastChild;
+                links.innerHTML = `<a href="{{ url_for('registry.train')}}"
+                   onclick="return confirmTrain('${name}', '${digest}')">
+                    <span class="glyphicon glyphicon-play-circle" aria-hidden="true" data-original-title="Trigger Dag">
+                    </span>
                 </a>`
         });
       });
 
+      // Click handler for rows on the 'repositories' table
       $('#pht_station_repositories tbody').on('click', 'tr', function() {
+
+          // Select row visually
+         // if ( ! $(this).hasClass('selected')) {
+         //   repos_table.$('tr.selected').removeClass('selected');
+         //   $(this).addClass('selected');
+         // }
+
          selectedRepo = repos_table.row(this).data()[1];
          tags_table.destroy();
          tags_table = $('#pht_station_tags').DataTable({
@@ -103,24 +112,22 @@
       });
     });
 
-    function confirmTriggerDag(tag, digest){
-        if (confirm("Are you sure you want to run tag '"+tag+"' now?")) {
+    function confirmTrain(tag, digest){
+        if (confirm("Are you sure?")) {
             const params = {
                 tag, digest, repo: selectedRepo
             };
-            const url = "{{ url_for('executions.post_execution') }}";
             $.ajax({
                 type: "POST",
-                url: url,
+                url: "{{ url_for('registry.train') }}",
                 dataType: 'json',
                 async: false,
                 contentType: 'application/json',
                 data: JSON.stringify(params),
-                success: function () {
-                    alert('Execution has been created successfully');
-                }
+                success: () => alert('Successfully accepted train!')
             })
         }
+        // prevents following the link in <a> tag
         return false;
     }
     </script>

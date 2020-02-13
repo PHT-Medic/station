@@ -6,6 +6,7 @@ A Repository Client is a thing that can be asked for repositories
 import abc
 import concurrent.futures
 import dataclasses
+import types
 import typing
 
 import pht_trainlib.data as data
@@ -46,8 +47,8 @@ class RepositoryClient(abc.ABC):
         """Returns an Iterable of all Remote Images that this client has access to"""
 
     @abc.abstractmethod
-    def image_metadata(self, image: data.RemoteImage) -> typing.Tuple[data.ImageManifest, typing.Any]:
-        """Returns the metadata of a remote image"""
+    def image_metadata(self, repo_name: str, tag: str) -> typing.Tuple[data.ImageManifest, typing.Any]:
+        """Returns the metadata of a remote image."""
 
 
 def _get(obj, attr):
@@ -98,6 +99,11 @@ class _HarborRepoClient(RepositoryClient):
             for tag in self._client.get_tags(repo.name):
                 yield data.RemoteImage(repository=repo.name, tag=tag.name)
 
-    def image_metadata(self, image: data.RemoteImage) -> typing.Tuple[data.ImageManifest, typing.Any]:
-        response = self._client.get_manifest(repo_name=image.repository, tag=image.tag)
-        return response.manifest, {'config': response.config}
+    def image_metadata(self, repo_name: str, tag: str) -> typing.Tuple[data.ImageManifest, typing.Any]:
+        """Returns Metadata for the selected image.
+
+        The first component is the image Manifest.
+        The second component is populated implementation-specifically
+        """
+        response = self._client.get_manifest(repo_name=repo_name, tag=tag)
+        return response.manifest, types.MappingProxyType({'config': response.config})

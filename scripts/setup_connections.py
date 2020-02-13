@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+import json
+
 import airflow
 import airflow.utils.db
 
@@ -26,26 +28,30 @@ def drop_all_connections(session):
 
 def create_connections(session):
     conn_type_docker = 'docker'
-    conn_type_http = 'http'
+    conn_type_postgres = 'postgres'
 
     # The container registry for pulling images
     container_registry = airflow.models.Connection(
         conn_id=f'pht_station_all_{conn_type_docker}_container_registry',
-        conn_type=conn_type_docker,
+        conn_type='docker',
         host='harbor.lukaszimmermann.dev',
         login='foo',
         password='bar',
         schema='https')
 
-    station_api = airflow.models.Connection(
-        conn_id=f'pht_station_1_{conn_type_http}_station_api',
-        conn_type=conn_type_http,
-        host='nginx',
-        port=80,
-        login='foo',
-        password='bar',
-        schema='http')
-    session.add_all([container_registry, station_api])
+    # Postgres database for the Station
+    postgres_station = airflow.models.Connection(
+        conn_id=f'pht_station_all_{conn_type_postgres}_station_db',
+        conn_type=conn_type_postgres,
+        host='db',
+        port=5432,
+        login='station',
+        schema='station',    # Maps to Database in Postgres
+        password='station')
+    session.add_all([
+        container_registry,
+        postgres_station
+    ])
 
 
 @airflow.utils.db.provide_session

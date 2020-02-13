@@ -3,62 +3,187 @@
 {% block title %}PHT Tracker{% endblock %}
 
 {% block head_css %}
-{{ super() }}
-<link href="{{ url_for("static", filename="dataTables.bootstrap.css") }}" rel="stylesheet" type="text/css" >
-<link href="{{ url_for("static", filename="bootstrap-toggle.min.css") }}" rel="stylesheet" type="text/css">
+    {{ super() }}
+    <link href="{{ url_for("static", filename="dataTables.bootstrap.css") }}" rel="stylesheet" type="text/css" >
+    <link href="{{ url_for("static", filename="bootstrap-toggle.min.css") }}" rel="stylesheet" type="text/css">
+    <style type="text/css">
+.lds-ring {
+  display: inline-block;
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+.lds-ring div {
+  box-sizing: border-box;
+  display: block;
+  position: absolute;
+  width: 64px;
+  height: 64px;
+  margin: 8px;
+  border: 8px solid #fff;
+  border-radius: 50%;
+  animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+  border-color: #fff transparent transparent transparent;
+}
+.lds-ring div:nth-child(1) {
+  animation-delay: -0.45s;
+}
+.lds-ring div:nth-child(2) {
+  animation-delay: -0.3s;
+}
+.lds-ring div:nth-child(3) {
+  animation-delay: -0.15s;
+}
+@keyframes lds-ring {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+    </style>
 {% endblock %}
 
 {% block body %}
-  <h2>Resources</h2>
+    <h2>Resources</h2>
 
-  <div id="main_content">
-    <div class="row">
-      <div class="col-sm-2">
-      </div>
-      <div class="col-sm-10">
-      </div>
-    </div>
-      <!-- Trigger the modal for adding Docker volumes -->
-      <button type="button" class="btn btn-info btn-lg" data-toggle="modal" data-target="#dockerVolume">
-          Add Docker Volume
-      </button>
+    <div id="main_content">
+        <div class="row">
+            <div class="col-sm-2">
+            </div>
+            <div class="col-sm-10">
+            </div>
+        </div>
+        <!-- Trigger the modal for adding Docker volumes -->
+        <button type="button" class="btn btn-info btn-lg" data-toggle="modal" data-target="#dockerVolume">
+            Add Docker Volume
+        </button>
 
-      <!-- Modal for adding Docker Volume -->
-    <div id="dockerVolume" class="modal fade" role="dialog">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal">&times;</button>
-            <h4 class="modal-title">Modal Header</h4>
-          </div>
-          <div class="modal-body">
-            <p>Some text in the modal.</p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-          </div>
+        <!-- Modal for adding Docker Volume -->
+        <div id="dockerVolume" class="modal fade" role="document">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title">Add a Docker Volume to the Station's resources</h4>
+                    </div>
+                    <div class="modal-body">
+                        <table id="pht_station_docker_volumes" class="table table-striped table-bordered table-hover">
+                            <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Driver</th>
+                                <th>Scope</th>
+                                <th>CreatedAt</th>
+                                <!-- Column containing the actions available on the Docker volumes -->
+                                <th></th>
+                            </tr>
+                            </thead>
+                        </table>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
-      </div>
-    </div>
-    <table id="pht_station_tags"
-           class="table table-striped table-bordered table-hover">
-        <thead>
+        <table id="pht_station_resources"
+               class="table table-striped table-bordered table-hover">
+            <thead>
             <tr>
                 <th>ID</th>
                 <th>Resource Key</th>
                 <th>Type</th>
             </tr>
-        </thead>
-    </table>
-  </div>
+            </thead>
+        </table>
+    </div>
 
 {% endblock %}
 
 {% block tail %}
-  {{ super() }}
-  <script src="{{ url_for('static', filename='d3.v3.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='jquery.dataTables.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='bootstrap-toggle.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='bootstrap3-typeahead.min.js') }}"></script>
+    {{ super() }}
+    <script src="{{ url_for('static', filename='d3.v3.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='jquery.dataTables.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='bootstrap-toggle.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='bootstrap3-typeahead.min.js') }}"></script>
+    <script>
+        $(function() {
+            loadDockerVolumeTable();
+        });
+
+        const loadDockerVolumeTable = function() {
+            function initTable() {
+                return $("#pht_station_docker_volumes").DataTable({
+                    searching: false,
+                    paging: false,
+                    ajax: {
+                        url: "{{ url_for('resources.docker_volumes')}}",
+                        dataSrc: 'volumes'
+                    },
+                    columns: [
+                        {"data": "volume.name"},
+                        {"data": "volume.driver"},
+                        {"data": "volume.scope"},
+                        {"data": "volume.created_at"},
+                        {"data": "resource_key"} // For the action buttons
+                    ]
+                })
+            }
+            function reload() {
+                if (dockerVolumesTable) {
+                    dockerVolumesTable.destroy();
+                }
+                dockerVolumesTable = initTable();
+                dockerVolumesTable.on('draw.dt', function() {
+                    dockerVolumesTable.rows().every( function ( rowIdx, tableLoop, rowLoop ) {
+                        const {resource_key, volume} = this.data();
+                        const name = volume.name;
+                        let html;
+                        if ( ! resource_key) {
+                            html = `<button
+                                type="button" class="btn btn-primary"
+                                onclick="addDockerVolume(this, '${name}')" >Add</button>`
+                        } else {
+                            html = resource_key;
+                        }
+                        this.node().lastChild.innerHTML = html;
+                    });
+                });
+            }
+            let dockerVolumesTable = initTable();
+            return reload;
+        }();
+
+
+    function addDockerVolume(btn, name) {
+        setSpinning(btn);
+        $.ajax({
+            type: "POST",
+            url: "{{ url_for('resources.api_resources') }}",
+            dataType: 'json',
+            async: false,
+            contentType: 'application/json',
+            data: JSON.stringify({name, }),
+            success: function () {
+                  alert('Execution has been created successfully');
+                }
+            })
+    }
+
+
+    function setSpinning(btn) {
+        btn.disabled = true;
+        btn.innerHTML = 'Waiting';
+    }
+    </script>
 {% endblock %}
+
+{##}
+{#<button class="btn btn-primary" type="button" disabled>#}
+{#  <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>#}
+{#  <span class="sr-only">Loading...</span>#}
+{#</button>#}
