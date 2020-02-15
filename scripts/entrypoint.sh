@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+unset PHT_STATION_AIRFLOW_STATIC
+
 TRY_LOOP="20"
 
 fatal() {
@@ -76,7 +78,6 @@ if [ "$AIRFLOW__CORE__EXECUTOR" = "CeleryExecutor" ]; then
   wait_for_port "Redis" "$REDIS_HOST" "$REDIS_PORT"
 fi
 
-python /usr/local/app.py &
 case "$1" in
   webserver)
       airflow initdb

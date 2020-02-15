@@ -107,7 +107,8 @@ class Registry(BaseView):
             # a new dag needs to be triggered for newly inserted identities
             run = airflow.trigger(dag_id=airflow.DAG_INSPECT, conf={
                 'repository': tracker.repository,
-                'tag': tracker.tag
+                'tag': tracker.tag,
+                'tracker_identity_id': tracker_identity_id
             })
             # TODO Link run info with tracker_identity
 
@@ -122,7 +123,7 @@ class Trains(BaseView):
     @expose('/')
     def trains(self):
         # The UI will refer to the TrackerIdentities as Trains
-        return self.render(_template_trains, trains=TrackerIdentity.update_data())
+        return self.render(_template_trains, trains=TrackerIdentity.view_all())
 
     ###############################################################
     # API
@@ -180,11 +181,13 @@ resources_view = Resources(category=_category, name='Resources')
 trains_view = Trains(category=_category, name='Trains')
 
 
-# Creating a flask blueprint to integrate the templates and static folder
-bp = flask.Blueprint(
-    _plugin_name, __name__,
-    template_folder='templates',  # registers airflow/plugins/templates as a Jinja template folder
-    static_folder='static',       # registers airflow/plugins/static
+bp1 = flask.Blueprint(
+    _plugin_name + '_templates', __name__,
+    template_folder='templates')
+
+bp3 = flask.Blueprint(
+    _plugin_name + '_images', __name__,
+    static_folder='static',
     static_url_path='/images')
 
 
@@ -231,7 +234,7 @@ def _create_skeleton(manifest: ImageManifest) -> ImageManifestSkeleton:
 class AirflowTestPlugin(AirflowPlugin):
     name = 'pht_station'
     admin_views = [registry_view, resources_view, trains_view]
-    flask_blueprints = [bp]
+    flask_blueprints = [bp1, bp3]
     menu_links = []
     appbuilder_views = []
     appbuilder_menu_items = []

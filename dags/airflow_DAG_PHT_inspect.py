@@ -11,6 +11,8 @@ import requests
 import pht_trainlib.docker_ops as docker_ops
 from pht_trainlib.context import TrainContext
 
+from pht_station.models import TrackerIdentity
+
 
 default_args = {
     'owner': 'Airflow',
@@ -52,7 +54,7 @@ def get_fslayers_digests(station_id, tracker_id) -> typing.Sequence[str]:
 
 def get_params(context):
     params = context['params']
-    return params['repository'], params['tag']
+    return params['repository'], params['tag'], params['tracker_identity_id']
 
 
 ##
@@ -63,22 +65,24 @@ def pull(**context):
     """
     Pulls the train image for extracting the meta data fr2om it.
     """
-    repo, tag = get_params(context)
+    repo, tag, __ = get_params(context)
     registry = get_container_registry()
-
-    repository = registry.host + '/' + repo
-    docker_ops.pull(repository=repository, tag=tag)
-    return repository + ':' + tag
+    docker_ops.pull(repository=registry.host + '/' + repo, tag=tag)
 
 
 def inspect(**context):
     """
     Pulls the train image for extracting the meta data from it.
     """
-    image = context['task_instance'].xcom_pull(task_ids='PHT_inspect_pull')
+    repo, tag, tracker_identity_id = get_params(context)
+    registry = get_container_registry()
+    image = registry.host + '/' + repo + ':' + tag
     with TrainContext() as train_context:
         inspection = train_context.run_inspect(image)
 
+    TrackerIdentity.update_data(tracker_identity_id=tracker_identity_id, data={
+        'inspection': json.loads(inspection)
+    })
 
 # TODO
 # def verify_fs_layer(**context):

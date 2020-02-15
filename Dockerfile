@@ -1,6 +1,6 @@
 FROM python:3.7.6-slim-buster
 
-EXPOSE 4000 8080 5555 8793
+EXPOSE 8080 5555 8793
 SHELL [ "/bin/bash", "-euo", "pipefail", "-c" ]
 
 ENV DEBIAN_FRONTEND noninteractive
@@ -53,7 +53,9 @@ RUN apt-get update -yqq \
         /usr/share/man \
         /usr/share/doc \
         /usr/share/doc-base && sync
-COPY app.py scripts/entrypoint.sh scripts/setup_connections.py /usr/local/
+
+COPY static/select.dataTables.min.css static/dataTables.select.min.js ${PHT_STATION_AIRFLOW_STATIC}/
+COPY scripts/entrypoint.sh scripts/setup_connections.py /usr/local/
 COPY config/airflow.cfg ${AIRFLOW_USER_HOME}/airflow.cfg
 COPY dags ${AIRFLOW_USER_HOME}/dags
 COPY templates ${AIRFLOW_USER_HOME}/plugins/templates
