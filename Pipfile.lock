@@ -363,7 +363,7 @@
                 "sha256:06f5b3a99029c7134207dd882428a66992a9de2bef7c2b699b5641f9886c3302",
                 "sha256:b97607a1a18a5100839aec1dc26a1ea17ee0d93b20b0f008d80a5a050afb200b"
             ],
-            "markers": "python_version == '3.7'",
+            "markers": "python_version < '3.8'",
             "version": "==1.5.0"
         },
         "iso8601": {
@@ -592,10 +592,10 @@
         },
         "pht-trainlib": {
             "hashes": [
-                "sha256:556686de83ca7b5df881eb8d7f0a11b9d38a2f7336c9c2d9683ac6b8338b8d4c"
+                "sha256:9de492c857309596bfcfcc643105ec5b274e23e02498446f58ffcf45b750d566"
             ],
             "index": "pypi",
-            "version": "==0.15.0"
+            "version": "==0.15.1"
         },
         "prison": {
             "hashes": [

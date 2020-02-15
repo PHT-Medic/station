@@ -67,8 +67,15 @@
     // TODO Refactor
     let selectedRepo = undefined;
     $(function(){
-      const repos_table = $('#pht_station_repositories').DataTable({ select: true });
-      let tags_table = $('#pht_station_tags').DataTable();
+      const repos_table = $('#pht_station_repositories').DataTable({
+          select: true,
+          searching: false,
+          paging: false,
+      });
+      let tags_table = $('#pht_station_tags').DataTable({
+          searching: false,
+          paging: false,
+      });
       tags_table.on('draw.dt', function () {
             tags_table.rows().every( function ( rowIdx, tableLoop, rowLoop ) {
                 const {name, digest} = this.data();
@@ -93,6 +100,8 @@
          selectedRepo = repos_table.row(this).data()[1];
          tags_table.destroy();
          tags_table = $('#pht_station_tags').DataTable({
+             searching: false,
+             paging: false,
              ajax: {
                  url: "{{ url_for('registry.get_repository')}}" + `/${selectedRepo}/tag`,
                  dataSrc: 'tags'
@@ -108,7 +117,6 @@
                  {"defaultContent": ""} // For the links
              ]
          });
-
       });
     });
 

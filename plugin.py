@@ -1,5 +1,5 @@
 import dataclasses
-from itertools import chain, tee
+import itertools
 
 from airflow.plugins_manager import AirflowPlugin
 import flask
@@ -11,6 +11,7 @@ from pht_trainlib.data import DockerVolume, ImageManifest
 
 from pht_station.http_clients import Harbor, create_repo_client
 from pht_station.resource_types import DOCKER_VOLUME
+import pht_station.airflow as airflow
 from pht_station.models import \
     Resource, TrackerIdentity, Tracker, ImageManifestSkeleton, DockerImageManifest, MediaType, HashValueSHA256
 
@@ -35,7 +36,7 @@ POST = 'POST'
 _template_registry = f'{_plugin_name}/registry.html'
 _template_executions = f'{_plugin_name}/executions.html'
 _template_resources = f'{_plugin_name}/resources.html'
-
+_template_trains = f'{_plugin_name}/trains.html'
 
 # Prefix for routes that are APIs (the ones with JSON)
 _API = 'api'
@@ -96,24 +97,41 @@ class Registry(BaseView):
 
         validate_request_body_for_train(body)
 
-        tracker_id = Tracker.upsert(repository=repo, tag=tag).tracker_id
+        tracker = Tracker.upsert(repository=repo, tag=tag)
         manifest_id = _load_manifest(repo=repo, tag=tag, repo_client=self._repo_client)
-        TrackerIdentity.upsert(
-            tracker_id=tracker_id,
+        tracker_identity_id, inserted = TrackerIdentity.upsert(
+            tracker_id=tracker.id,
             docker_image_manifest_id=manifest_id,
             digest_tag_harbor=digest)
+        if inserted:
+            # a new dag needs to be triggered for newly inserted identities
+            run = airflow.trigger(dag_id=airflow.DAG_INSPECT, conf={
+                'repository': tracker.repository,
+                'tag': tracker.tag
+            })
+            # TODO Link run info with tracker_identity
 
         return _NO_CONTENT
 
 
-class Executions(BaseView):
+class Trains(BaseView):
 
     ###############################################################
     # Views
     ###############################################################
     @expose('/')
     def trains(self):
-        return self.render(_template_executions)
+        # The UI will refer to the TrackerIdentities as Trains
+        return self.render(_template_trains, trains=TrackerIdentity.update_data())
+
+    ###############################################################
+    # API
+    ###############################################################
+    @expose(f'/{_API}/trackeridentity')
+    def trackeridentity(self):
+        return {
+            'trackeridentities': convert_to_serializable(TrackerIdentity.update_data())
+        }
 
 
 class Resources(BaseView):
@@ -158,8 +176,9 @@ class Resources(BaseView):
 
 
 registry_view = Registry(category=_category, name='Registry')
-executions_view = Executions(category=_category, name='Executions')
 resources_view = Resources(category=_category, name='Resources')
+trains_view = Trains(category=_category, name='Trains')
+
 
 # Creating a flask blueprint to integrate the templates and static folder
 bp = flask.Blueprint(
@@ -167,32 +186,6 @@ bp = flask.Blueprint(
     template_folder='templates',  # registers airflow/plugins/templates as a Jinja template folder
     static_folder='static',       # registers airflow/plugins/static
     static_url_path='/images')
-
-# ml = MenuLink(
-#     category='Test Plugin',
-#     name='Test Menu Link',
-#     url='https://airflow.apache.org/')
-
-
-# v_appbuilder_view = TestAppBuilderBaseView()
-# v_appbuilder_package = {"name": "Test View",
-#                         "category": "Test Plugin",
-#                         "view": v_appbuilder_view}
-
-# Creating a flask appbuilder Menu Item
-# appbuilder_mitem = {"name": "Google",
-#                     "category": "Search",
-#                     "category_icon": "fa-th",
-#                     "href": "https://www.google.com"}
-
-
-class AirflowTestPlugin(AirflowPlugin):
-    name = 'pht_station'
-    admin_views = [registry_view, executions_view, resources_view]
-    flask_blueprints = [bp]
-    menu_links = []
-    appbuilder_views = []
-    appbuilder_menu_items = []
 
 
 def _load_manifest(repo: str, tag: str, repo_client) -> int:
@@ -214,13 +207,13 @@ def _create_skeleton(manifest: ImageManifest) -> ImageManifestSkeleton:
 
     # 0. Media Types
     manifest_media_types = list(MediaType.get_primary_keys(
-        chain(
+        itertools.chain(
             (manifest.mediaType, manifest_config.mediaType),
             (layer.mediaType for layer in manifest_layers))))
 
     # 1. Hash Values, Manifest are marked True, configs are marked False
     manifest_hash_values = list(HashValueSHA256.upsert_all(
-        chain([manifest_config.digest], (layer.digest for layer in manifest_layers))))
+        itertools.chain([manifest_config.digest], (layer.digest for layer in manifest_layers))))
 
     manifest_skel = ImageManifestSkeleton(
         schemaVersion=manifest.schemaVersion,
@@ -233,3 +226,13 @@ def _create_skeleton(manifest: ImageManifest) -> ImageManifestSkeleton:
         layer_digests=manifest_hash_values[1:])
 
     return manifest_skel
+
+
+class AirflowTestPlugin(AirflowPlugin):
+    name = 'pht_station'
+    admin_views = [registry_view, resources_view, trains_view]
+    flask_blueprints = [bp]
+    menu_links = []
+    appbuilder_views = []
+    appbuilder_menu_items = []
+

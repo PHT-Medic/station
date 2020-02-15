@@ -1,4 +1,5 @@
 import datetime
+import json
 import typing
 
 import airflow
@@ -8,9 +9,8 @@ from airflow.hooks.base_hook import BaseHook
 import requests
 
 import pht_trainlib.docker_ops as docker_ops
+from pht_trainlib.context import TrainContext
 
-
-# start date:  datetime.datetime(2015, 6, 1)
 
 default_args = {
     'owner': 'Airflow',
@@ -29,11 +29,6 @@ default_args = {
 }
 
 dag = airflow.DAG(dag_id='PHT_inspect', default_args=default_args, schedule_interval=None)
-
-
-def get_params(context):
-    params = context['params']
-    return params['repository'], params['tag'], params['station_id'], params['tracker_id']
 
 
 def get_container_registry():
@@ -55,45 +50,60 @@ def get_fslayers_digests(station_id, tracker_id) -> typing.Sequence[str]:
     ]
 
 
+def get_params(context):
+    params = context['params']
+    return params['repository'], params['tag']
+
+
 ##
 # Python Operator
 ##
 
 def pull(**context):
     """
+    Pulls the train image for extracting the meta data fr2om it.
+    """
+    repo, tag = get_params(context)
+    registry = get_container_registry()
+
+    repository = registry.host + '/' + repo
+    docker_ops.pull(repository=repository, tag=tag)
+    return repository + ':' + tag
+
+
+def inspect(**context):
+    """
     Pulls the train image for extracting the meta data from it.
     """
-    repo, tag, station_id, __ = get_params(context)
-    registry = get_container_registry()
-    pull_result = docker_ops.pull(
-        repository=registry.host + '/' + repo,
-        tag=tag)
-    return pull_result.attrs['Id']
+    image = context['task_instance'].xcom_pull(task_ids='PHT_inspect_pull')
+    with TrainContext() as train_context:
+        inspection = train_context.run_inspect(image)
 
 
-def verify_fs_layer(**context):
-    """
-    Verifies that the FSLayers of the pulled image are the one expected using the tracker
-    """
-    image_id = context['task_instance'].xcom_pull(task_ids='pull')
-    __, __, station_id, tracker_id = get_params(context)
-
-    digests_station_api = get_fslayers_digests(station_id, tracker_id)
-    digests_docker_host = docker_ops.get_fslayers(image_id)
-    print(digests_station_api, flush=True)
-    print(digests_docker_host, flush=True)
+# TODO
+# def verify_fs_layer(**context):
+#     """
+#     Verifies that the FSLayers of the pulled image are the one expected using the tracker
+#     """
+#     image_id = context['task_instance'].xcom_pull(task_ids='pull')
+#     __, __, station_id, tracker_id = get_params(context)
+#
+#     digests_station_api = get_fslayers_digests(station_id, tracker_id)
+#     digests_docker_host = docker_ops.get_fslayers(image_id)
+#     print(digests_station_api, flush=True)
+#     print(digests_docker_host, flush=True)
 
 
 t1 = PythonOperator(
     python_callable=pull,
     provide_context=True,
-    task_id='pull',
+    task_id='PHT_inspect_pull',
     dag=dag)
 
 t2 = PythonOperator(
-    python_callable=verify_fs_layer,
+    python_callable=inspect,
     provide_context=True,
-    task_id='verify_fs_layer',
+    task_id='PHT_inspect_inspect',
     dag=dag)
 
 t1 >> t2

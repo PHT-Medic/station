@@ -1,6 +1,8 @@
 import dataclasses
+import typing
 
 import sqlalchemy as sa
+import sqlalchemy.orm
 from sqlalchemy.ext.declarative import declared_attr
 
 
@@ -11,20 +13,18 @@ from .internal import Base
 
 @dataclasses.dataclass(frozen=True)
 class TrackerView:
-    tracker_id: int
+    id: int
     repository: str
     tag: str
 
-#
-# @dataclasses.dataclass(frozen=True)
-# class TrackerIdentityView:
-#     tracker_identity_id: int
-#     revision: int
-#     docker_image_config_id: int
-#     docker_image_manifest_id: int
-#     identity_data: str
-#     failed_at: str
-#     tracker: TrackerView
+
+@dataclasses.dataclass(frozen=True)
+class TrackerIdentityView:
+    id: int
+    digest_tag_harbor: str
+    docker_image_manifest_id: int
+    identity_data: str
+    tracker: TrackerView
 
 
 class Tracker(Base):
@@ -46,7 +46,7 @@ class Tracker(Base):
             session.add(tracker)
             session.commit()
         return TrackerView(
-            tracker_id=tracker.id,
+            id=tracker.id,
             repository=tracker.repository,
             tag=tracker.tag)
 
@@ -59,20 +59,14 @@ class TrackerIdentity(Base):
 
     id = sa.Column(sa.Integer, primary_key=True)
     tracker_id = sa.Column(sa.Integer, sa.ForeignKey('tracker.id'), unique=False, nullable=False)
-
-    # The n-th identity of this tracker
     revision = sa.Column(sa.Integer, unique=False, nullable=False)
-
-    # Columns that make up the identity
     docker_image_manifest_id = sa.Column(sa.Integer, sa.ForeignKey('docker_image_manifest.id'),
                                          unique=False, nullable=False)
     digest_tag_harbor = sa.Column(sa.String(80), unique=False, nullable=False)
-
-    # Metadata that is associated with this identity
     identity_data = sa.Column(sa.JSON, unique=False, nullable=True)
-
-    # when this identity was created
     created_at = sa.Column(sa.DateTime, unique=False, nullable=False, default=timestamp_now)
+
+    tracker = sqlalchemy.orm.relationship('Tracker')
 
     @classmethod
     @provide_session
@@ -80,14 +74,18 @@ class TrackerIdentity(Base):
                tracker_id: int,
                docker_image_manifest_id: int,
                digest_tag_harbor: str,
-               session=None) -> int:
+               session=None) -> typing.Tuple[int, bool]:
+        """
+        Upserts TrackerIdentity.
+        :return: type (x, inserted) where x is the primary key
+        """
         existing = session.query(cls).filter_by(
             docker_image_manifest_id=docker_image_manifest_id,
             tracker_id=tracker_id,
             digest_tag_harbor=digest_tag_harbor).first()
 
         if existing:
-            result = existing.id
+            result = existing.id, False
         else:
             t = TrackerIdentity(
                 tracker_id=tracker_id,
@@ -96,8 +94,41 @@ class TrackerIdentity(Base):
                 digest_tag_harbor=digest_tag_harbor)
             session.add(t)
             session.commit()
-            result = t.id
+            result = t.id, True
         return result
+
+    @classmethod
+    @provide_session
+    def view_all(cls, session=None) -> typing.Iterable[TrackerIdentityView]:
+        result = []
+        _all = session.query(cls).all()
+        for tracker_identity in _all:
+            tracker = tracker_identity.tracker
+            result.append(
+                TrackerIdentityView(
+                    id=tracker_identity.id,
+                    digest_tag_harbor=tracker_identity.digest_tag_harbor,
+                    docker_image_manifest_id=tracker_identity.docker_image_manifest_id,
+                    identity_data=tracker_identity.identity_data,
+                    tracker=TrackerView(
+                        id=tracker.id,
+                        repository=tracker.repository,
+                        tag=tracker.tag)))
+        return result
+
+    @classmethod
+    @provide_session
+    def update_data(cls, tracker_identity_id: int, data, session=None):
+        tracker_identity = session.query(cls).get(tracker_identity_id)
+        identity_data = tracker_identity.identity_data
+        if identity_data:
+            identity_data = dict(identity_data)
+        else:
+            identity_data = {}
+        identity_data.update(data)
+        tracker_identity.identity_data = identity_data
+        session.merge(tracker_identity)
+
 
     # @classmethod
     # @provide_session
