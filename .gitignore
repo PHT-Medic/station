@@ -2,3 +2,6 @@
 docker-compose_bak.yml
 **/__pycache__
 rebuild.sh
+
+# Sphinx documentation
+docs/_build/
