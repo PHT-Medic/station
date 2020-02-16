@@ -27,6 +27,8 @@ _table_docker_image_manifest = 'docker_image_manifest'
 _table_docker_image_manifest_layer = 'docker_image_manifest_layer'
 _table_tracker = 'tracker'
 _table_tracker_identity = 'tracker_identity'
+_table_processing_state = 'processing_state'
+_table_processing = 'processing'
 
 
 def upgrade():
@@ -150,9 +152,36 @@ def upgrade():
         # when this identity was created
         sa.Column(_created_at, sa.DateTime, unique=False, nullable=False))
 
+    # Table: processing_state
+    table = alembic.op.create_table(
+        _table_processing_state,
+        sa.Column(_id, sa.Integer, primary_key=True),
+        sa.Column(_name, sa.String(80), unique=True, nullable=False))
+
+    alembic.op.bulk_insert(table, [
+        {
+            _name: 'Created',
+        }, {
+            _name: 'Running',
+        }, {
+            _name: 'Success'
+        }
+    ])
+
+    # Table: processing
+    alembic.op.create_table(
+        _table_processing,
+        sa.Column(_id, sa.Integer, primary_key=True),
+        sa.Column('processing_state_id', sa.Integer, sa.ForeignKey('processing_state.id'),
+                  unique=False, nullable=False),
+        sa.Column('tracker_identity_id', sa.Integer, sa.ForeignKey('tracker_identity.id'),
+                  unique=False, nullable=False))
+
 
 def downgrade():
     # Drop tables in reverse order of creation
+    alembic.op.drop_table(_table_processing)
+    alembic.op.drop_table(_table_processing_state)
     alembic.op.drop_table(_table_tracker_identity)
     alembic.op.drop_table(_table_tracker)
     alembic.op.drop_table(_table_docker_image_manifest_layer)

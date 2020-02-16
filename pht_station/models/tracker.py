@@ -1,5 +1,6 @@
 import dataclasses
 import typing
+import types
 
 import sqlalchemy as sa
 import sqlalchemy.orm
@@ -100,21 +101,16 @@ class TrackerIdentity(Base):
     @classmethod
     @provide_session
     def view_all(cls, session=None) -> typing.Iterable[TrackerIdentityView]:
-        result = []
-        _all = session.query(cls).all()
-        for tracker_identity in _all:
-            tracker = tracker_identity.tracker
-            result.append(
-                TrackerIdentityView(
-                    id=tracker_identity.id,
-                    digest_tag_harbor=tracker_identity.digest_tag_harbor,
-                    docker_image_manifest_id=tracker_identity.docker_image_manifest_id,
-                    identity_data=tracker_identity.identity_data,
-                    tracker=TrackerView(
-                        id=tracker.id,
-                        repository=tracker.repository,
-                        tag=tracker.tag)))
-        return result
+        return [
+            _to_view(tracker_identity) for tracker_identity in session.query(cls).all()
+        ]
+
+    @classmethod
+    @provide_session
+    def view(cls, tracker_identity_id: int, session=None) -> TrackerIdentityView:
+        return _to_view(
+            session.query(cls).get(tracker_identity_id)
+        )
 
     @classmethod
     @provide_session
@@ -129,6 +125,25 @@ class TrackerIdentity(Base):
         tracker_identity.identity_data = identity_data
         session.merge(tracker_identity)
 
+    @classmethod
+    @provide_session
+    def get_identity_data(cls, tracker_identity_id: int, session=None):
+        """Return read-only mapping of the identity data of the specified tracker identity"""
+        tracker_identity = session.query(cls).get(tracker_identity_id)
+        return types.MappingProxyType(tracker_identity.identity_data)
+
+
+def _to_view(tracker_identity) -> TrackerIdentityView:
+    tracker = tracker_identity.tracker
+    return TrackerIdentityView(
+        id=tracker_identity.id,
+        digest_tag_harbor=tracker_identity.digest_tag_harbor,
+        docker_image_manifest_id=tracker_identity.docker_image_manifest_id,
+        identity_data=tracker_identity.identity_data,
+        tracker=TrackerView(
+            id=tracker.id,
+            repository=tracker.repository,
+            tag=tracker.tag))
 
     # @classmethod
     # @provide_session

@@ -41,19 +41,15 @@ services:
             - ./templates:/usr/local/airflow/plugins/templates
             - ./pht_station:/opt/pythonpath/pht_station
         environment:
-            # We do not load the example dags
-            - LOAD_EX=n
+            - LOAD_EX=n      # Do not load example DAGS
             - EXECUTOR=Local
             - POSTGRES_HOST=db
-            - PHT_STATION_API_HOSTNAME=station
-            - PHT_STATION_API_PORT=8082
             - PHT_STATION_REGISTY_HOSTNAME=harbor.lukaszimmermann.dev
             - PYTHONPATH=/opt/pythonpath
         depends_on:
           - db
           - redis
         ports:
-            - 4000:4000
             - 8080:8080
             - 5555:5555
             - 8793:8793

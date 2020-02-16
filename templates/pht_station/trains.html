@@ -28,6 +28,7 @@
     </div>
     <div class="row">
         <div class="col-sm-2">
+            <h3>Imported</h3>
             <table id="pht_station_trains"
                    class="table table-striped table-bordered table-hover">
                 <thead>
@@ -35,7 +36,6 @@
                         <th>Id</th>
                         <th>Repository</th>
                         <th>Tag</th>
-                        <th>Manifest</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -44,13 +44,32 @@
                         <td>{{ train.id }}</td>
                         <td>{{ train.tracker.repository }}</td>
                         <td>{{ train.tracker.tag }}</td>
-                        <td>TODO</td>
                     </tr>
                 {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
+    <div class="row">
+          <div class="col-sm-2">
+            <h3>Executions</h3>
+            <table id="pht_station_executions"
+                   class="table table-striped table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Endpoint</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+    <h2>Endpoint (TODO)</h2>
+        <button
+                type="button"
+                class="btn btn-primary"
+                onclick="process()"
+        >Process</button>
   </div>
 {% endblock %}
 
@@ -62,4 +81,58 @@
   <script src="{{ url_for('static', filename='dataTables.select.min.js') }}"></script>
   <script src="{{ url_for('static', filename='bootstrap-toggle.min.js') }}"></script>
   <script src="{{ url_for('static', filename='bootstrap3-typeahead.min.js') }}"></script>
+
+    <script>
+    let inspection;
+    let trackerIdentityId;
+    $(function() {
+            const trainsTable = $("#pht_station_trains").DataTable({
+                searching: false,
+                paging: false,
+                select: true
+            });
+            let executionsTable = initExecutionsTable();
+
+            // Click handler for the trains table
+            $('#pht_station_trains tbody').on('click', 'tr', function () {
+                trackerIdentityId = trainsTable.row(this).data()[0];
+                const url = "{{ url_for('trains.trackeridentity_index') }}" + `/${trackerIdentityId}`;
+
+                // Reload the currently loaded inspection
+                $.getJSON(url, (data) => {
+                    inspection = data['inspection'];
+                    executionsTable.destroy();
+                    executionsTable = initExecutionsTable({
+                        data: loadExecutionsForTable(inspection)
+                    });
+                });
+            });
+        }
+    );
+    function loadExecutionsForTable(inspection) {
+        return inspection['executions'].map((execution) => [
+            execution.name,
+            execution.endpoint
+        ])
+    }
+    function initExecutionsTable(more) {
+        const params = Object.assign({
+            searching: false,
+            paging: false,
+            select: true
+        }, more);
+        return $('#pht_station_executions').DataTable(params);
+    }
+    function process() {
+        $.ajax({
+            type: 'POST',
+            url: "{{ url_for('trains.process') }}",
+            dataType: 'json',
+            async: false,
+            contentType: 'application/json',
+            data: JSON.stringify({trackerIdentityId}),
+            success: () => alert('Successfully started execution')
+        })
+    }
+    </script>
 {% endblock %}

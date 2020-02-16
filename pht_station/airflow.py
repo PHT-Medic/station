@@ -7,3 +7,4 @@ def trigger(dag_id, conf=None):
 
 # N.B. Keep these IDs in sync with
 DAG_INSPECT = 'PHT_inspect'
+DAG_PROCESS = 'PHT_process'
