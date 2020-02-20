@@ -4,11 +4,6 @@ volumes:
     pgdata:
         external: true
 
-networks:
-  default:
-    external:
-      name: pht-station
-
 services:
 
     db:
@@ -38,7 +33,7 @@ services:
         restart: always
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
-            - ./templates:/usr/local/airflow/plugins/templates
+            - ./www/templates:/usr/local/airflow/plugins/templates
             - ./pht_station:/opt/pythonpath/pht_station
         environment:
             - LOAD_EX=n      # Do not load example DAGS

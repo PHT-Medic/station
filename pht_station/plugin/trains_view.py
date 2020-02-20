@@ -30,9 +30,7 @@ class Trains(BaseView):
 
     @expose(f'/{API}/trackeridentity/<tracker_identity_id>')
     def trackeridentity(self, tracker_identity_id):
-        return convert_to_serializable(
-            TrackerIdentity.get_identity_data(tracker_identity_id)
-        )
+        return _view(tracker_identity_id)
 
     @expose(f'/{API}/process', methods=(POST, ))
     def process(self):
@@ -41,14 +39,8 @@ class Trains(BaseView):
         _validate_body_for_process(body)
         tracker_identity_id = body['trackerIdentityId']
 
-        # TODO Share session
-        tracker = TrackerIdentity.view(tracker_identity_id).tracker
-        proc_id = Processing.create(tracker_identity_id=tracker_identity_id)
         airflow.trigger(dag_id=airflow.DAG_PROCESS, conf={
-            'processing_id': proc_id,
-            'repository': tracker.repository,
-            'tag': tracker.tag,
-            'tracker_identity_id': tracker_identity_id
+            'tracker_identity': _view(int(tracker_identity_id))
         })
         return NO_CONTENT
 
@@ -56,3 +48,7 @@ class Trains(BaseView):
 def _validate_body_for_process(body):
     # TODO
     pass
+
+
+def _view(tracker_identity_id: int):
+    return convert_to_serializable(TrackerIdentity.view(tracker_identity_id))

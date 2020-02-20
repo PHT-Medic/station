@@ -100,7 +100,8 @@
 
                 // Reload the currently loaded inspection
                 $.getJSON(url, (data) => {
-                    inspection = data['inspection'];
+
+                    inspection = loadInspection(data);
                     executionsTable.destroy();
                     executionsTable = initExecutionsTable({
                         data: loadExecutionsForTable(inspection)
@@ -133,6 +134,12 @@
             data: JSON.stringify({trackerIdentityId}),
             success: () => alert('Successfully started execution')
         })
+    }
+    /**
+     * Loads the inspection from the view_data
+     */
+    function loadInspection(view_data) {
+        return view_data['identity_data']['inspection'];
     }
     </script>
 {% endblock %}

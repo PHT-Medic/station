@@ -5,10 +5,10 @@ import airflow
 from airflow.operators.python_operator import PythonOperator
 from airflow.hooks.base_hook import BaseHook
 
-from pht_trainlib.context import TrainContext
-from pht_trainlib.docker_ops import list_volumes
+from pht_station.dag_ops import TrainContext, list_volumes
 
 # start date:  datetime.datetime(2015, 6, 1)
+tracker['repository'] = ''
 
 default_args = {
     'owner': 'Airflow',
@@ -19,6 +19,7 @@ default_args = {
     'email_on_failure': False,
     'email_on_retry': False,
     'retries': 0,
+
     'retry_delay': datetime.timedelta(minutes=5),
     # 'queue': 'bash_queue',
     # 'pool': 'backfill',
@@ -33,9 +34,15 @@ def get_container_registry():
     return BaseHook.get_connection('pht_station_all_docker_container_registry')
 
 
-def get_params(context):
-    p = context['params']
-    return p['processing_id'], p['repository'], p['tag'], p['tracker_identity_id']
+def get_tracker_identity(context):
+    return context['params']['tracker_identity']
+
+
+def image_name(tracker_identity):
+    registry = get_container_registry()
+    tracker = tracker_identity['tracker']
+    repo = tracker['repository']
+    tag = tracker['tag']
 
 
 # def pull(**context):
@@ -53,67 +60,57 @@ def get_params(context):
 # Python Operator
 ##
 
-
-# TODO Replace with the inspection from the database
-def determine_endpoint(**context):
-    __, repo, tag, __ = get_params(context)
-    registry = get_container_registry()
-    image = registry.host + '/' + repo + ':' + tag
-    with TrainContext() as tc:
-        endpoint = tc.run_get_endpoint_of_currently_running_execution(image)
-    return endpoint
-
-
 def process(**context):
-    __, repo, tag, __ = get_params(context)
+
+    tracker_identity = get_tracker_identity(context)
     registry = get_container_registry()
-    image = registry.host + '/' + repo + ':' + tag
-    endpoint = context['task_instance'].xcom_pull(task_ids='PHT_process_determine_endpoint')
 
-    # TODO Resource config
-    volumes = {
-            volume.name: {
-                'bind': os.path.join('/', 'mnt', volume.name),
-                'mode': 'ro'
-            } for volume in list_volumes() if volume.name.startswith('pht')
-    }
-
-    environment = {
-        'PHT_RESOURCE_' + key.upper(): value['bind'] for (key, value) in volumes.items()
-    }
-
-    with TrainContext() as tc:
-        response = tc.run(
-            command='',
-            image=image,
-            entrypoint=f'/opt/pht_train/endpoints/{endpoint}/commands/run/entrypoint.py',
-            network_disabled=True,
-            working_dir='/opt/pht_train/executions/_currently_running/_working',
-            environment=environment,
-            volumes=volumes)
-        print(response, flush=True)
+    # image = registry.host + '/' + repo + ':' + tag
+    # endpoint = context['task_instance'].xcom_pull(task_ids='PHT_process_determine_endpoint')
+    #
+    # # TODO Resource config
+    # volumes = {
+    #         volume.name: {
+    #             'bind': os.path.join('/', 'mnt', volume.name),
+    #             'mode': 'ro'
+    #         } for volume in list_volumes() if volume.name.startswith('pht')
+    # }
+    #
+    # environment = {
+    #     'PHT_RESOURCE_' + key.upper(): value['bind'] for (key, value) in volumes.items()
+    # }
+    #
+    # with TrainContext() as tc:
+    #     response = tc.run(
+    #         command='',
+    #         image=image,
+    #         entrypoint=f'/opt/pht_train/endpoints/{endpoint}/commands/run/entrypoint.py',
+    #         network_disabled=True,
+    #         working_dir='/opt/pht_train/executions/_currently_running/_working',
+    #         environment=environment,
+    #         volumes=volumes)
+    #     print(response, flush=True)
 
 
 t1 = PythonOperator(
-    python_callable=determine_endpoint,
-    provide_context=True,
-    task_id='PHT_process_determine_endpoint',
-    dag=dag)
-
-
-t2 = PythonOperator(
     python_callable=process,
     provide_context=True,
-    task_id='PHT_process_process',
+    task_id='PHT_process_get_identity_data_from_station',
     dag=dag)
 
-t1 >> t2
 
-
+# t2 = PythonOperator(
+#     python_callable=process,
+#     provide_context=True,
+#     task_id='PHT_process_process',
+#     dag=dag)
+#
+# t1 >> t2
 
 
 
 # TODO Backlog
+
 
 # def get_fslayers_digests(station_id, tracker_id) -> typing.Sequence[str]:
 #     """
