@@ -73,9 +73,7 @@ class Registry(BaseView):
         if inserted:
             # a new dag needs to be triggered for newly inserted identities
             run = airflow.trigger(dag_id=airflow.DAG_INSPECT, conf={
-                'repository': tracker.repository,
-                'tag': tracker.tag,
-                'tracker_identity_id': tracker_identity_id
+                'tracker_identity': _view(int(tracker_identity_id))
             })
             # TODO Link run info with tracker_identity?
 
@@ -125,3 +123,7 @@ def _create_skeleton(manifest: ImageManifest) -> ImageManifestSkeleton:
         layer_digests=manifest_hash_values[1:])
 
     return manifest_skel
+
+
+def _view(tracker_identity_id: int):
+    return convert_to_serializable(TrackerIdentity.view(tracker_identity_id))

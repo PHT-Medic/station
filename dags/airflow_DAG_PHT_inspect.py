@@ -50,11 +50,11 @@ def inspect(**context):
     """
     Pulls the train image for extracting the meta data from it.
     """
-    __, __, image = create_image_name(context)
+    __, repo_with_tag, __ = create_image_name(context)
     tii = get_tracker_identity_id(context)
 
     with TrainContext() as train_context:
-        inspection = train_context.run_inspect(image)
+        inspection = train_context.run_inspect(repo_with_tag)
 
     set_inspection(tii, inspection)
 
