@@ -8,7 +8,6 @@ from airflow.hooks.base_hook import BaseHook
 from pht_station.dag_ops import TrainContext, list_volumes
 
 # start date:  datetime.datetime(2015, 6, 1)
-tracker['repository'] = ''
 
 default_args = {
     'owner': 'Airflow',
