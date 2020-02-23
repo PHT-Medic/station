@@ -5,3 +5,4 @@ rebuild.sh
 
 # Sphinx documentation
 docs/_build/
+.venv
