@@ -10,9 +10,11 @@ name = "pypiserver"
 
 [packages]
 apache-airflow = {version = "*", extras = ["celery","password","redis","postgres"]}
+hvac = "*"
 marshmallow_dataclass = "<6.0"
 pht-trainlib = "*"
 uplink = {version = "*", extras = ["marshmallow"]}
 
 [requires]
 python_version = "3.7"
+
