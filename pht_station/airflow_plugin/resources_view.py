@@ -8,13 +8,12 @@ from pht_trainlib.docker_ops import list_volumes
 from pht_trainlib.data import DockerVolume
 
 from pht_station.models import Resource
-from pht_station.resource_types import DOCKER_VOLUME
 
 
-from .internal import API, template_path, POST, GET
+from .internal import template_path, POST, GET
 
 
-_template_resources = template_path('resources.html')
+_template_resources = template_path('resources')
 
 
 @dataclasses.dataclass(frozen=True)
@@ -41,7 +40,7 @@ class Resources(BaseView):
         resources = Resource.tabulate(
             key_f=lambda res: res.attributes['name'],
             value_f=lambda res: res.key,
-            resource_type_id=DOCKER_VOLUME)
+            resource_type_id=1)
 
         return {
             'volumes': convert_to_serializable(

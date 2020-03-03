@@ -2,13 +2,13 @@ import flask
 from flask_admin import BaseView, expose
 
 from pht_trainlib.util import convert_to_serializable
-from pht_station.models import TrackerIdentity, Processing
+from pht_station.models import TrackerIdentity
 import pht_station.airflow as airflow
 
 from .internal import API, template_path, POST, NO_CONTENT
 
 
-_template_trains = template_path('trains.html')
+_template_trains = template_path('trains')
 
 
 class Trains(BaseView):

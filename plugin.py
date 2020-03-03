@@ -1,7 +1,8 @@
 import flask
 from airflow.plugins_manager import AirflowPlugin
-from pht_station.plugin import \
-    Resources, Trains, Registry, Processings, PLUGIN_NAME
+from pht_station.airflow_plugin import \
+    QuickExecution,\
+    PLUGIN_NAME
 
 
 _category = 'PHT Station'
@@ -10,10 +11,11 @@ _category = 'PHT Station'
 class AirflowTestPlugin(AirflowPlugin):
     name = PLUGIN_NAME
     admin_views = [
-        Registry(category=_category, name='Registry'),
-        Resources(category=_category, name='Resources'),
-        Trains(category=_category, name='Trains'),
-        Processings(category=_category, name='Processings')
+        # Registry(category=_category, name='Registry'),
+        # Resources(category=_category, name='Resources'),
+        # Trains(category=_category, name='Trains'),
+        # Processings(category=_category, name='Processings'),
+        QuickExecution(category=_category, name='Quick Execution')
     ]
     flask_blueprints = [
         flask.Blueprint(

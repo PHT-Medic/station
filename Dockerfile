@@ -24,6 +24,7 @@ COPY requirements.txt /tmp/
 RUN apt-get update -yqq \
     && apt-get dist-upgrade -yqq \
     && apt-get install -yqq --no-install-recommends --no-install-suggests \
+        git \
         libpq-dev \
         build-essential \
         apt-utils \
@@ -44,6 +45,7 @@ RUN apt-get update -yqq \
     # Image cleanup
     && apt-get purge --auto-remove -yqq \
         build-essential \
+        git \
     && apt-get autoremove -yqq --purge \
     && apt-get clean \
     && rm -rf \

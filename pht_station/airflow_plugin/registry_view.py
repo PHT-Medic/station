@@ -18,7 +18,7 @@ from pht_station.models import \
 from .internal import API, template_path, POST, NO_CONTENT
 
 
-_template_registry = template_path('registry.html')
+_template_registry = template_path('registry')
 
 
 class Registry(BaseView):

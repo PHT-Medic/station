@@ -21,7 +21,7 @@ class Repository:
 
 
 @dataclasses.dataclass(frozen=True)
-class RepositoryTag:
+class Tag:
     name: str
     digest: str
     size: int
@@ -39,16 +39,17 @@ class RepositoryClient(abc.ABC):
         """Returns a list of all repositories that a client has access to"""
 
     @abc.abstractmethod
-    def tags(self, repo_name: str) -> typing.Iterable[RepositoryTag]:
+    def tags(self, repo_name: str) -> typing.Iterable[Tag]:
         """Return list of all tags associated with this repository"""
-
-    @abc.abstractmethod
-    def remote_images(self) -> typing.Iterable[data.RemoteImage]:
-        """Returns an Iterable of all Remote Images that this client has access to"""
 
     @abc.abstractmethod
     def image_metadata(self, repo_name: str, tag: str) -> typing.Tuple[data.ImageManifest, typing.Any]:
         """Returns the metadata of a remote image."""
+
+    def repo_tags(self) -> typing.Iterable[typing.Tuple[Repository, Tag]]:
+        yield from (
+            (repo, tag) for repo in self.repositories() for tag in self.tags(repo.name)
+        )
 
 
 def _get(obj, attr):
@@ -80,9 +81,9 @@ class _HarborRepoClient(RepositoryClient):
                 )
         return result
 
-    def tags(self, repo_name: str) -> typing.Iterable[RepositoryTag]:
+    def tags(self, repo_name: str) -> typing.Iterable[Tag]:
         yield from (
-            RepositoryTag(
+            Tag(
                 name=_get(tag, 'name'),
                 digest=_get(tag, 'digest'),
                 size=_get(tag, 'size'),
@@ -93,11 +94,6 @@ class _HarborRepoClient(RepositoryClient):
                 created=_get(tag, 'created')
             ) for tag in self._client.get_tags(repo_name)
         )
-
-    def remote_images(self) -> typing.Iterable[data.RemoteImage]:
-        for repo in self.repositories():
-            for tag in self._client.get_tags(repo.name):
-                yield data.RemoteImage(repository=repo.name, tag=tag.name)
 
     def image_metadata(self, repo_name: str, tag: str) -> typing.Tuple[data.ImageManifest, typing.Any]:
         """Returns Metadata for the selected image.

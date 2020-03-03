@@ -1,0 +1,39 @@
+{% extends "pht_station/master.html" %}
+
+{% block body %}
+  <h2>Train Images</h2>
+
+  <div id="main_content">
+    <div class="row">
+      <div class="col-sm-2">
+      </div>
+      <div class="col-sm-10">
+      </div>
+    </div>
+   <form method="post" action="{{ url_for('quickexecution.index') }}">
+     {{ form.hidden_tag() }}
+    <table id="pht_station_repotags"
+           class="table table-striped table-bordered table-hover">
+        <thead>
+            <tr>
+                <th>Repository</th>
+                <th>Description</th>
+                <th>Tag</th>
+                <th>Select</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for r in repotags %}
+            <tr>
+                <td>{{ r.repo.name }}</td>
+                <td>{{ r.repo.description }}</td>
+                <td>{{ r.tag.name }}</td>
+                <td><input type="radio" name="image" value="{{ r.repo.name + ':' + r.tag.name }}"></td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+   <button type="Submit" class="btn">Execute!</button>
+   </form>
+  </div>
+{% endblock %}

@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "a8768539f29815028e46ac602469fabd409533f34d3e68d6f7571f783d4e8e41"
+            "sha256": "c2eab63a71e5b8e661a7062dbec68db68116a855e6bacc29eb4454e555c8b27b"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -12,20 +12,15 @@
                 "name": "pypi",
                 "url": "https://pypi.org/simple",
                 "verify_ssl": true
-            },
-            {
-                "name": "pypiserver",
-                "url": "https://pypiserver.lukaszimmermann.dev/simple",
-                "verify_ssl": true
             }
         ]
     },
     "default": {
         "alembic": {
             "hashes": [
-                "sha256:2df2519a5b002f881517693b95626905a39c5faf4b5a1f94de4f1441095d1d26"
+                "sha256:791a5686953c4b366d3228c5377196db2f534475bb38d26f70eb69668efd9028"
             ],
-            "version": "==1.4.0"
+            "version": "==1.4.1"
         },
         "amqp": {
             "hashes": [
@@ -124,10 +119,10 @@
         },
         "celery": {
             "hashes": [
-                "sha256:7c544f37a84a5eadc44cab1aa8c9580dff94636bb81978cdf9bf8012d9ea7d8f",
-                "sha256:d3363bb5df72d74420986a435449f3c3979285941dff57d5d97ecba352a0e3e2"
+                "sha256:3c5fcd6bfcf9a6323cb742cfc121d1790d50cfeddf300ba723cfa0b356413f07",
+                "sha256:a650525303ee866fb0c62c82f68681fcc2183eebbfafae552c27d30125fe518b"
             ],
-            "version": "==4.4.0"
+            "version": "==4.4.1"
         },
         "certifi": {
             "hashes": [
@@ -371,7 +366,7 @@
                 "sha256:06f5b3a99029c7134207dd882428a66992a9de2bef7c2b699b5641f9886c3302",
                 "sha256:b97607a1a18a5100839aec1dc26a1ea17ee0d93b20b0f008d80a5a050afb200b"
             ],
-            "markers": "python_version < '3.8'",
+            "markers": "python_version == '3.7'",
             "version": "==1.5.0"
         },
         "iso8601": {
@@ -411,10 +406,10 @@
         },
         "kombu": {
             "hashes": [
-                "sha256:2a9e7adff14d046c9996752b2c48b6d9185d0b992106d5160e1a179907a5d4ac",
-                "sha256:67b32ccb6fea030f8799f8fd50dd08e03a4b99464ebc4952d71d8747b1a52ad1"
+                "sha256:2d1cda774126a044d91a7ff5fa6d09edf99f46924ab332a810760fe6740e9b76",
+                "sha256:598e7e749d6ab54f646b74b2d2df67755dee13894f73ab02a2a9feb8870c7cb2"
             ],
-            "version": "==4.6.7"
+            "version": "==4.6.8"
         },
         "lazy-object-proxy": {
             "hashes": [
@@ -451,9 +446,10 @@
         },
         "mako": {
             "hashes": [
-                "sha256:2984a6733e1d472796ceef37ad48c26f4a984bb18119bb2dbc37a44d8f6e75a4"
+                "sha256:3139c5d64aa5d175dbafb95027057128b5fbd05a40c53999f3905ceb53366d9d",
+                "sha256:8e8b53c71c7e59f3de716b6832c4e401d903af574f6962edbbbf6ecc2a5fe6c9"
             ],
-            "version": "==1.1.1"
+            "version": "==1.1.2"
         },
         "markdown": {
             "hashes": [
@@ -523,10 +519,10 @@
         },
         "marshmallow-sqlalchemy": {
             "hashes": [
-                "sha256:a370e247216e1a005277d92079d2f0d8d5b0a70fba68ee645730f6a1200991d1",
-                "sha256:f3155e87717e3a52def3a177b4022fd0500e71f626cbb0672adcb95588a99aa3"
+                "sha256:9301c6fd197bd97337820ea1417aa1233d0ee3e22748ebd5821799bc841a57e8",
+                "sha256:dde9e20bcb710e9e59f765a38e3d6d17f1b2d6b4320cbdc2cea0f6b57f70d08c"
             ],
-            "version": "==0.22.2"
+            "version": "==0.22.3"
         },
         "mypy-extensions": {
             "hashes": [
@@ -599,11 +595,9 @@
             "version": "==1.4.4"
         },
         "pht-trainlib": {
-            "hashes": [
-                "sha256:be2ff16dff31f08f79f39d4a68676470af3ebbedf01ff7e710c12eb5bdb373fd"
-            ],
-            "index": "pypi",
-            "version": "==0.16.6"
+            "editable": true,
+            "git": "https://gitlab.com/PersonalHealthTrain/implementations/germanmii/difuture/station/trainlib.git",
+            "ref": "f58d4ebf0b43a4506f71e48ab94d7c32cfccf6cc"
         },
         "prison": {
             "hashes": [
@@ -926,10 +920,10 @@
         },
         "zipp": {
             "hashes": [
-                "sha256:12248a63bbdf7548f89cb4c7cda4681e537031eda29c02ea29674bc6854460c2",
-                "sha256:7c0f8e91abc0dc07a5068f315c52cb30c66bfbc581e5b50704c8a2f6ebae794a"
+                "sha256:aa36550ff0c0b7ef7fa639055d797116ee891440eac1a56f378e2d3179e0320b",
+                "sha256:c599e4d75c98f6798c509911d08a22e6c021d074469042177c8c86fb92eefd96"
             ],
-            "version": "==3.0.0"
+            "version": "==3.1.0"
         },
         "zope.deprecation": {
             "hashes": [

@@ -19,8 +19,8 @@ depends_on = None
 
 # TODO Maybe namespaces?
 # Table names
-_table_resource_type = 'resource_type'
-_table_resource = 'resource'
+# _table_resource_type = 'resource_type'
+# _table_resource = 'resource'
 _table_media_type = 'media_type'
 _table_hash_value_sha256 = 'hash_value_sha256'
 _table_docker_image_manifest = 'docker_image_manifest'
@@ -46,33 +46,33 @@ def upgrade():
     _digest = 'digest'
 
     # Table: resource_type
-    table = alembic.op.create_table(
-        _table_resource_type,
-        sa.Column(_id, sa.Integer, primary_key=True),
-        sa.Column(_name, sa.String(40), unique=True, nullable=False),
-
-        # Stores attributes names to their descriptions
-        sa.Column(_attribute_descriptions, sa.JSON, nullable=True, unique=False))
-
-    alembic.op.bulk_insert(table, [{
-        _name: 'DOCKER_VOLUME',
-        _attribute_descriptions: {
-            _name: 'The name of the Docker volume as reported by the docker daemon'
-        }
-    }])
+    # table = alembic.op.create_table(
+    #     _table_resource_type,
+    #     sa.Column(_id, sa.Integer, primary_key=True),
+    #     sa.Column(_name, sa.String(40), unique=True, nullable=False),
+    #
+    #     # Stores attributes names to their descriptions
+    #     sa.Column(_attribute_descriptions, sa.JSON, nullable=True, unique=False))
+    #
+    # alembic.op.bulk_insert(table, [{
+    #     _name: 'DOCKER_VOLUME',
+    #     _attribute_descriptions: {
+    #         _name: 'The name of the Docker volume as reported by the docker daemon'
+    #     }
+    # }])
 
     # Table: resource
-    alembic.op.create_table(
-        _table_resource,
-        sa.Column('id', sa.Integer, primary_key=True),
-        sa.Column('key', sa.String(80), unique=True, nullable=False),
-        sa.Column('resource_type_id', sa.Integer, sa.ForeignKey('resource_type.id'), unique=False, nullable=False),
-
-        # The resource-specific attributes
-        sa.Column('attributes', sa.JSON, unique=False, nullable=False),
-
-        # Configuration for resource attached to container at runtime
-        sa.Column('container_config', sa.JSON, unique=False, nullable=True))
+    # alembic.op.create_table(
+    #     _table_resource,
+    #     sa.Column('id', sa.Integer, primary_key=True),
+    #     sa.Column('key', sa.String(80), unique=True, nullable=False),
+    #     sa.Column('resource_type_id', sa.Integer, sa.ForeignKey('resource_type.id'), unique=False, nullable=False),
+    #
+    #     # The resource-specific attributes
+    #     sa.Column('attributes', sa.JSON, unique=False, nullable=False),
+    #
+    #     # Configuration for resource attached to container at runtime
+    #     sa.Column('container_config', sa.JSON, unique=False, nullable=True))
 
     # Table: media_type
     table = alembic.op.create_table(
@@ -188,5 +188,5 @@ def downgrade():
     alembic.op.drop_table(_table_docker_image_manifest)
     alembic.op.drop_table(_table_hash_value_sha256)
     alembic.op.drop_table(_table_media_type)
-    alembic.op.drop_table(_table_resource)
-    alembic.op.drop_table(_table_resource_type)
+    # alembic.op.drop_table(_table_resource)
+    # alembic.op.drop_table(_table_resource_type)

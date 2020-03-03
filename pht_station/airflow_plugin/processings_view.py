@@ -3,7 +3,7 @@ from flask_admin import BaseView, expose
 from .internal import template_path
 
 
-_template_processings = template_path('processings.html')
+_template_processings = template_path('processings')
 
 
 class Processings(BaseView):

@@ -10,4 +10,4 @@ NO_CONTENT = flask.Response(status=204)
 
 
 def template_path(filename: str) -> str:
-    return f'{PLUGIN_NAME}/{filename}'
+    return f'{PLUGIN_NAME}/{filename}.html'
