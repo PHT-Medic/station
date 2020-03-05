@@ -5,7 +5,7 @@ from wtforms import RadioField
 import pht_trainlib.util as util
 import pht_station.airflow as airflow
 from pht_station.http_clients import Harbor, create_repo_client
-from .internal import template_path, GET, POST, NO_CONTENT
+from .internal import template_path, GET, POST
 
 
 _template_quick_execution = template_path('quick_execution')
@@ -48,10 +48,6 @@ class QuickExecution(BaseView):
             execution_date = airflow.trigger(dag_id=dag_id, conf={
                 'image': f'{self._container_registry_host}/{image}'
             }).execution_date
-            print(execution_date, flush=True)
             return flask.redirect(
                 flask.url_for(
                     'airflow.graph', dag_id=dag_id, execution_date=execution_date))
-
-
-# http://localhost:8080/admin/airflow/graph?dag_id=PHT_quick&execution_date=2020-03-05+10%3A32%3A21%2B00%3A00
