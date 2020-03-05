@@ -2,7 +2,6 @@ import json
 import typing
 
 from airflow.hooks.base_hook import BaseHook
-from pht_trainlib import TrainContext
 
 
 import pht_trainlib.util as util
@@ -39,3 +38,5 @@ def set_inspection(tracker_identity_id, inspection):
     TrackerIdentity.update_data(tracker_identity_id=tracker_identity_id, data={
         'inspection': json.loads(inspection)
     })
+
+

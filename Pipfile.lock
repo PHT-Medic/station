@@ -597,7 +597,7 @@
         "pht-trainlib": {
             "editable": true,
             "git": "https://gitlab.com/PersonalHealthTrain/implementations/germanmii/difuture/station/trainlib.git",
-            "ref": "f58d4ebf0b43a4506f71e48ab94d7c32cfccf6cc"
+            "ref": "4c806911b2ad51ebf77466b76b776aa1357d8c75"
         },
         "prison": {
             "hashes": [

@@ -1,11 +1,8 @@
 import datetime
-import os
 
 import airflow
 from airflow.operators.python_operator import PythonOperator
 from airflow.hooks.base_hook import BaseHook
-
-from pht_station.dag_ops import TrainContext, list_volumes
 
 # start date:  datetime.datetime(2015, 6, 1)
 

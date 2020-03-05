@@ -1,5 +1,5 @@
 -i https://pypi.org/simple
--e git+https://gitlab.com/PersonalHealthTrain/implementations/germanmii/difuture/station/trainlib.git@f58d4ebf0b43a4506f71e48ab94d7c32cfccf6cc#egg=pht-trainlib
+-e git+https://gitlab.com/PersonalHealthTrain/implementations/germanmii/difuture/station/trainlib.git@4c806911b2ad51ebf77466b76b776aa1357d8c75#egg=pht-trainlib
 alembic==1.4.1
 amqp==2.5.2
 apache-airflow[celery,password,postgres,redis]==1.10.9
