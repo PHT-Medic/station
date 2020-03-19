@@ -16,15 +16,11 @@ of this distribution are:
 * This Airflow distribution comes bundled with PostgreSQL via `docker-compose`. This is the recommended DBMS
   for the PHT Station.
 * The used Executor is the `LocalExecutor`.  We **plan** to also support `CeleryExecutor` in the future, but this is currently not the case.
-* This distribution comes with an additional HTTP service, exposed on the Airflow container on port 4000.
-  This is supposed to be a temporary solution until Apache Airflow 2 is released, which will have an
-  [overhauled REST API](https://cwiki.apache.org/confluence/display/AIRFLOW/Airflow+2.0). 
 
 ## Requirements
 
 * `docker` and `Docker Compose`
 * The following ports are used by Airflow and need to be available on the host:
-    - 4000
     - 5432
     - 5555
     - 6379
@@ -38,20 +34,16 @@ of this distribution are:
 
 2. Make sure that the ports listed above are available.
 
-3. Create the Docker Network `pht-station` using:
-    ```shell script
-    docker network create pht-station
-    ```
 
-4. Create the Docker volume for Postgres using:
+3. Create the Docker volume for Postgres using:
     ```shell script
     docker volume create pgdata
     ```
-5. Run:
+4. Run:
     ```shell script
     docker-compose -f docker-compose-install.yml up -d
     ```
-6. In your browser, go to `http://localhost:8081`:
+5. In your browser, go to `http://localhost:8081`:
     1. Login using Postgres system, username: `postgres`, password: `postgres`
     2. Create the database `airflow`
     3. Run the following SQL query for creating the user:
@@ -62,16 +54,16 @@ of this distribution are:
         ```postgresql
           GRANT ALL ON DATABASE airflow TO airflow;
         ```
-7. Run:
+6. Run:
     ```shell script
        docker-compose -f docker-compose-install.yml down -v --remove-orphans
     ```
    
-8. Run `docker-compose pull`
+7. Run `docker-compose pull`
 
-9. Run `docker-compose build --no-cache --pull` 
+8. Run `docker-compose build --no-cache --pull` 
 
-10. Edit the variable `sql_alchemy_conn` in `config/airflow.cfg` to reflect your Postgres configuration and make sure
+9. Edit the variable `sql_alchemy_conn` in `config/airflow.cfg` to reflect your Postgres configuration and make sure
     that this is consistent with the `docker-compose.yml` file
 
 ## Running Airflow
@@ -85,7 +77,6 @@ The following TCP ports are used by this application stack:
 
 Port | Service (Docker Compose) | Description
 -----|--------------------------|----------------------------------------
-4000 | `airflow`                | Something Airflow related. I don't know.
 5432 | `db`                     | Postgres DBMS
 5555 | `airflow`                | Something Airflow related. I don't know.
 6379 | `redis`                  | The Redis port
