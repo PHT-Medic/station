@@ -70,23 +70,11 @@ def op_pull(**context):
         tag=tag)
 
 
-def op_inspect(**context):
-    image = get_image_from_context(context)
-    with TrainContext() as train_context:
-        inspection = train_context.run_inspect(image)
-    return inspection
-
-
 def op_process(**context):
-    inspection = json.loads(context['task_instance'].xcom_pull(task_ids='PHT_quick_op_inspect'))
-    endpoint = get_endpoint_from_inspection(inspection)
     with TrainContext() as tc:
         response = tc.run(
-            command='',
             image=get_image_from_context(context),
-            entrypoint=f'/opt/pht_train/endpoints/{endpoint}/commands/run/entrypoint.py',
             network_disabled=True,
-            working_dir='/opt/pht_train/executions/_currently_running/_working',
             volumes=get_volumes())
     return response.container_id
 
@@ -114,6 +102,5 @@ def _op(task_id, f):
 
 
 _op(task_id='PHT_quick_op_pull', f=op_pull) >> \
-    _op(task_id='PHT_quick_op_inspect', f=op_inspect) >> \
     _op('PHT_quick_op_process', f=op_process) >> \
     _op('PHT_quick_op_commit_and_push', f=op_commit_and_push)
