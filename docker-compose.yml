@@ -23,7 +23,7 @@ services:
             - 8081:8080
 
     redis:
-        image: redis:5.0.7-alpine3.11
+        image: redis:5.0.8-alpine3.11
         restart: always
         ports:
             - 6379:6379

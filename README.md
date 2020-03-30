@@ -34,15 +34,16 @@ of this distribution are:
 
 2. Make sure that the ports listed above are available.
 
-
 3. Create the Docker volume for Postgres using:
     ```shell script
     docker volume create pgdata
     ```
+
 4. Run:
     ```shell script
     docker-compose -f docker-compose-install.yml up -d
     ```
+
 5. In your browser, go to `http://localhost:8081`:
     1. Login using Postgres system, username: `postgres`, password: `postgres`
     2. Create the database `airflow`
@@ -54,6 +55,7 @@ of this distribution are:
         ```postgresql
           GRANT ALL ON DATABASE airflow TO airflow;
         ```
+
 6. Run:
     ```shell script
        docker-compose -f docker-compose-install.yml down -v --remove-orphans
@@ -66,20 +68,20 @@ of this distribution are:
 9. Edit the variable `sql_alchemy_conn` in `config/airflow.cfg` to reflect your Postgres configuration and make sure
     that this is consistent with the `docker-compose.yml` file
 
-## Running Airflow
+## First Steps with Running Airflow
 1. Run `docker-compose up -d`. 
 2. Check that the logs do not contain any startup errors with  `docker-compose logs -f`.
 3. Go to `http://localhost:8080` and check whether you can see the web frontend of Apache Airflow.
 4. Run the DAG `test_docker` to see whether DAGs generally have access to the Docker daemon.
 
-## Published Ports
-The following TCP ports are used by this application stack:
+### Connections
 
-Port | Service (Docker Compose) | Description
------|--------------------------|----------------------------------------
-5432 | `db`                     | Postgres DBMS
-5555 | `airflow`                | Something Airflow related. I don't know.
-6379 | `redis`                  | The Redis port
-8080 | `airflow`                | Airflow Web Interface
-8081 | `adminer`                | Adminer for database administration
-8793 | `airflow`                |  Something Airflow related. I don't know.
+Go to the admin -> Connection view in the Apache Airflow UI and set the following new connections:
+
+Connection Id: `pht_station_all_postgres_station_db`
+
+Field   | Value Description
+--------|------------------
+        |
+        
+        

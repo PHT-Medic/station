@@ -1,4 +1,4 @@
-FROM python:3.7.6-slim-buster
+FROM python:3.7.7-slim-buster
 
 EXPOSE 8080 5555 8793
 SHELL [ "/bin/bash", "-euo", "pipefail", "-c" ]
