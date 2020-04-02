@@ -4,8 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-apache-airflow = {version = "*", extras = ["celery","password","redis","postgres"]}
-hvac = "*"
+apache-airflow = {version = "*", extras = ["celery", "crypto", "password", "postgres", "redis"]}
 marshmallow_dataclass = "<6.0"
 uplink = {version = "*", extras = ["marshmallow"]}
 pht-trainlib = {git = "https://gitlab.com/PersonalHealthTrain/implementations/germanmii/difuture/station/trainlib.git", editable = true, ref = "master"}

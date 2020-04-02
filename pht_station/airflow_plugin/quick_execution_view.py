@@ -45,7 +45,7 @@ class QuickExecution(BaseView):
             dag_id = airflow.DAG_QUICK
             image = flask.request.form.get('image')
             # TODO What to do with run?
-            execution_date = airflow.trigger(dag_id=dag_id, conf={
+            execution_date = airflow.trigger_dag(dag_id=dag_id, conf={
                 'image': f'{self._container_registry_host}/{image}'
             }).execution_date
             return flask.redirect(

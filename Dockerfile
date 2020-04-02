@@ -25,6 +25,7 @@ RUN apt-get update -yqq \
     && apt-get dist-upgrade -yqq \
     && apt-get install -yqq --no-install-recommends --no-install-suggests \
         git \
+        libffi-dev \
         libpq-dev \
         build-essential \
         apt-utils \
@@ -47,7 +48,7 @@ RUN apt-get update -yqq \
         build-essential \
         git \
     && apt-get autoremove -yqq --purge \
-    && apt-get clean \
+    && apt-get -yqq clean \
     && rm -rf \
         /var/lib/apt/lists/* \
         /tmp/* \

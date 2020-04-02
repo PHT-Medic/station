@@ -26,8 +26,8 @@ wait_for_port() {
 # Check for the presence of netcat (nc)
 command -v nc > /dev/null 2>&1 || fatal 'Command "nc" does not exist. Terminating' 1
 
-# Force Python Version 3.7.6, Python 3.8 does not work as of 2020-01-10.
-[ "$(python --version)" = 'Python 3.7.6' ] || fatal 'Wrong Python version! Must be 3.7.6. Terminating!'
+# Force Python Version 3.7.7, Python 3.8 does not work as of 2020-01-10.
+[ "$(python --version)" = 'Python 3.7.7' ] || fatal 'Wrong Python version! Must be 3.7.7. Terminating!' 2
 
 : "${REDIS_HOST:="redis"}"
 : "${REDIS_PORT:="6379"}"
@@ -43,6 +43,7 @@ command -v nc > /dev/null 2>&1 || fatal 'Command "nc" does not exist. Terminatin
 : "${AIRFLOW_HOME:="/usr/local/airflow"}"
 : "${AIRFLOW__CORE__FERNET_KEY:=${FERNET_KEY:=$(python -c "from cryptography.fernet import Fernet; FERNET_KEY = Fernet.generate_key().decode(); print(FERNET_KEY)")}}"
 : "${AIRFLOW__CORE__EXECUTOR:=${EXECUTOR:-Sequential}Executor}"
+
 
 export \
   AIRFLOW_HOME \

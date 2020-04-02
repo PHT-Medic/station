@@ -39,7 +39,7 @@ class Trains(BaseView):
         _validate_body_for_process(body)
         tracker_identity_id = body['trackerIdentityId']
 
-        airflow.trigger(dag_id=airflow.DAG_PROCESS, conf={
+        airflow.trigger_dag(dag_id=airflow.DAG_PROCESS, conf={
             'tracker_identity': _view(int(tracker_identity_id))
         })
         return NO_CONTENT
