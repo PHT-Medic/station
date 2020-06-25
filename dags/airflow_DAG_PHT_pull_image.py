@@ -37,11 +37,12 @@ def pull_docker_image(**kwargs):
 def execute_container(**kwargs):
     repository = kwargs['dag_run'].conf['repository']  # 'harbor.pht.medic.uni-tuebingen.de/library/busybox'
     tag = kwargs['dag_run'].conf['tag']  # 'latest'
+    cmd = kwargs['dag_run'].conf['cmd']  # 'Hello World.'
+    entrypoint = kwargs['dag_run'].conf['entrypoint']  # 'echo'
     image = ':'.join([repository, tag])
     client = docker.from_env()
-    cmd = 'echo Hello World.'
     print("Running command '{}'".format(cmd))
-    container = client.containers.run(image=image, detach=True, command=cmd)
+    container = client.containers.run(image=image, command=cmd, detach=True, entrypoint=entrypoint)
     print(container.logs())
     exit_code = container.wait()["StatusCode"]
     if exit_code != 0:
