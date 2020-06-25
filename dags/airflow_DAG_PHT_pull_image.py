@@ -1,3 +1,4 @@
+import sys
 import datetime
 import airflow
 import docker
@@ -16,7 +17,9 @@ default_args = {
     'retry_delay': datetime.timedelta(minutes=5),
 }
 
+
 dag = airflow.DAG(dag_id='pull_image', default_args=default_args, schedule_interval=None)
+
 
 def pull_docker_image(**kwargs):
     repository = kwargs['dag_run'].conf['repository']  # 'harbor.pht.medic.uni-tuebingen.de/library/busybox'
@@ -30,9 +33,37 @@ def pull_docker_image(**kwargs):
     assert(':'.join([repository, tag]) in image_tags)
     print("Image was successfully pulled.")
 
+
+def execute_container(**kwargs):
+    repository = kwargs['dag_run'].conf['repository']  # 'harbor.pht.medic.uni-tuebingen.de/library/busybox'
+    tag = kwargs['dag_run'].conf['tag']  # 'latest'
+    image = ':'.join([repository, tag])
+    client = docker.from_env()
+    cmd = 'echo Hello World.'
+    print("Running command '{}'".format(cmd))
+    container = client.containers.run(image=image, detach=True, command=cmd)
+    print(container.logs())
+    exit_code = container.wait()["StatusCode"]
+    if exit_code != 0:
+        print("The command '{}' resulted in a non-zero exit code: {}".format(cmd, exit_code))
+        sys.exit()
+
+
 t1 = PythonOperator(
     task_id='pull_docker_image',
     provide_context=True,
     python_callable=pull_docker_image,
     dag=dag,
 )
+
+
+t2 = PythonOperator(
+    task_id='execute_container',
+    provide_context=True,
+    python_callable=execute_container,
+    execution_timeout=datetime.timedelta(minutes=1),
+    dag=dag,
+)
+
+
+t1 > t2
