@@ -41,12 +41,12 @@ def execute_container(**kwargs):
     entrypoint = kwargs['dag_run'].conf['entrypoint']  # 'echo'
     image = ':'.join([repository, tag])
     client = docker.from_env()
-    print("Running command '{}'".format(cmd))
+    print("Running command {}".format(cmd))
     container = client.containers.run(image=image, command=cmd, detach=True, entrypoint=entrypoint)
-    print(container.logs())
+    print(container.logs().decode("utf-8"))
     exit_code = container.wait()["StatusCode"]
     if exit_code != 0:
-        print("The command '{}' resulted in a non-zero exit code: {}".format(cmd, exit_code))
+        print("The command {} resulted in a non-zero exit code: {}".format(cmd, exit_code))
         sys.exit()
 
 
