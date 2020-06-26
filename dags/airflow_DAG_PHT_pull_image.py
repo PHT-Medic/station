@@ -21,9 +21,8 @@ default_args = {
 dag = airflow.DAG(dag_id='pull_image', default_args=default_args, schedule_interval=None)
 
 
-def pull_docker_image(**kwargs):
-    repository = kwargs['dag_run'].conf['repository']  # 'harbor.pht.medic.uni-tuebingen.de/library/busybox'
-    tag = kwargs['dag_run'].conf['tag']  # 'latest'
+def pull_docker_image(**context):
+    repository, tag = [context['dag_run'].conf[_] for _ in ['repository', 'tag']]
     # Pull the image.
     client = docker.from_env()
     client.images.pull(repository=repository, tag=tag)
@@ -34,19 +33,17 @@ def pull_docker_image(**kwargs):
     print("Image was successfully pulled.")
 
 
-def execute_container(**kwargs):
-    repository = kwargs['dag_run'].conf['repository']  # 'harbor.pht.medic.uni-tuebingen.de/library/busybox'
-    tag = kwargs['dag_run'].conf['tag']  # 'latest'
-    cmd = kwargs['dag_run'].conf['cmd']  # 'Hello World.'
-    entrypoint = kwargs['dag_run'].conf['entrypoint']  # 'echo'
+def execute_container(**context):
+    conf = ['repository', 'tag', 'cmd', 'entrypoint']
+    repository, tag, cmd, entrypoint = [context['dag_run'].conf[_] for _ in conf]
     image = ':'.join([repository, tag])
     client = docker.from_env()
-    print("Running command {}".format(cmd))
+    print(f"Running command {cmd}")
     container = client.containers.run(image=image, command=cmd, detach=True, entrypoint=entrypoint)
     print(container.logs().decode("utf-8"))
     exit_code = container.wait()["StatusCode"]
     if exit_code != 0:
-        print("The command {} resulted in a non-zero exit code: {}".format(cmd, exit_code))
+        print(f"The command {cmd} resulted in a non-zero exit code: {exit_code}")
         sys.exit()
 
 
@@ -67,4 +64,4 @@ t2 = PythonOperator(
 )
 
 
-t1 > t2
+t1 >> t2
