@@ -47,6 +47,12 @@ def execute_container(**context):
         sys.exit()
 
 
+def put_harbor_label(**context):
+    # TODO integrate code, see:
+    # https://redmine.medic.uni-tuebingen.de/issues/1733
+    assert(False)  # This line will be removed.
+
+
 t1 = PythonOperator(
     task_id='pull_docker_image',
     provide_context=True,
@@ -64,4 +70,13 @@ t2 = PythonOperator(
 )
 
 
-t1 >> t2
+t4 = PythonOperator(
+    task_id='put_harbor_label',
+    provide_context=True,
+    python_callable=put_harbor_label,
+    execution_timeout=datetime.timedelta(minutes=1),
+    dag=dag,
+        )
+
+
+t1 >> t2       >> t4
