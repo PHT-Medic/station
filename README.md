@@ -74,14 +74,14 @@ of this distribution are:
 3. Go to `http://localhost:8080` and check whether you can see the web frontend of Apache Airflow.
 4. Run the DAG `test_docker` to see whether DAGs generally have access to the Docker daemon.
 
-### Connections
 
-Go to the admin -> Connection view in the Apache Airflow UI and set the following new connections:
 
-Connection Id: `pht_station_all_postgres_station_db`
+## RESTful API for Trains
+The Station offers an RESTful API that can be consumed by Trains. The documentation of this API is available on Swagger Hub:
 
-Field   | Value Description
---------|------------------
-        |
-        
-        
+https://app.swaggerhub.com/apis/lukaszimmermann/PHT-Train-Station/0.2.0
+
+
+The [Train Container Library](https://gitlab.com/PersonalHealthTrain/implementations/germanmii/difuture/train-container-library) makes
+consuming this API easy.
+
