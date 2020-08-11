@@ -47,6 +47,11 @@ def execute_container(**context):
         sys.exit()
 
 
+def push_docker_image(**context):
+    # TODO integrate code here.
+    assert(False)  # This line will be removed.
+
+
 t1 = PythonOperator(
     task_id='pull_docker_image',
     provide_context=True,
@@ -64,4 +69,13 @@ t2 = PythonOperator(
 )
 
 
-t1 >> t2
+t3 = PythonOperator(
+    task_id='push_docker_image',
+    provide_context=True,
+    python_callable=push_docker_image,
+    execution_timeout=datetime.timedelta(minutes=1),
+    dag=dag,
+        )
+
+
+t1 >> t2 >> t3
