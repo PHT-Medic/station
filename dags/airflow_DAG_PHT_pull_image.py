@@ -3,6 +3,11 @@ import datetime
 import airflow
 import docker
 
+# TODO: Temporary solution! As mentioned by Lukas no use of primitives like requests.
+import configparser
+import requests
+import json
+
 from airflow.operators.python_operator import PythonOperator
 
 default_args = {
@@ -50,7 +55,35 @@ def execute_container(**context):
 def put_harbor_label(**context):
     # TODO integrate code, see:
     # https://redmine.medic.uni-tuebingen.de/issues/1733
-    assert(False)  # This line will be removed.
+    # Assumption that project name and project_repository can be extracted from the repository path from the last two labels
+    repository, tag = [context['dag_run'].conf[_] for _ in ['repository', 'tag']]
+    project, project_repo = repository.split('/')[-2:]
+    config = configparser.ConfigParser()
+    config.read(context['dag_run'].conf['conf'])
+    conf = ['API_URL', 'USERNAME', 'PASSWORD']
+    try:
+        api, username, password = [config["credentials"][_] for _ in conf]
+    except Exception as err:
+        print(err)
+        sys.exit()
+    # Label being set currently hardcoded
+    data = {'id': 7}  # pht_next id
+    #data = {'id': 8}  # pht_terminate id
+    print(f'Label to be added: {data}')
+    headers = {'accept': 'application/json', 'Content-Type': 'application/json'}
+    url = f'{api}/projects/{project}/repositories/{project_repo}/artifacts/{tag}/labels'
+    print(f'Url for adding the label: {url}')
+    try:
+        response = requests.post(url, headers=headers, data=json.dumps(data),
+                                 auth=(username, password))
+        response.raise_for_status()
+        return "Label is added"
+    except requests.exceptions.HTTPError as e:
+        print(e.response.text)
+        sys.exit()
+    except Exception as err:
+        print(err)
+        sys.exit()
 
 
 t1 = PythonOperator(
