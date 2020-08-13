@@ -59,12 +59,16 @@ def put_harbor_label(**context):
     repository, tag = [context['dag_run'].conf[_] for _ in ['repository', 'tag']]
     project, project_repo = repository.split('/')[-2:]
     config = configparser.ConfigParser()
-    config.read(context['dag_run'].conf['conf'])
+    conf_file = context['dag_run'].conf['conf']
+    print(f"Reading config file '{conf_file}':\n[credentials]\n"
+          "USERNAME = <USERNAME>\nPASSWORD = <PASSWORD>\n"
+          "API_URL = <HARBOR_API_URL>")
+    config.read(conf_file)
     conf = ['API_URL', 'USERNAME', 'PASSWORD']
     try:
         api, username, password = [config["credentials"][_] for _ in conf]
     except Exception as err:
-        print(err)
+        print("Credentials could not be parsed.")
         sys.exit()
     # Label being set currently hardcoded
     data = {'id': 7}  # pht_next id
