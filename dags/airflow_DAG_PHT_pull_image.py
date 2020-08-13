@@ -70,18 +70,32 @@ def put_harbor_label(**context):
     except Exception as err:
         print("Credentials could not be parsed.")
         sys.exit()
-    # Label being set currently hardcoded
-    data = {'id': 7}  # pht_next id
-    #data = {'id': 8}  # pht_terminate id
-    print(f'Label to be added: {data}')
-    headers = {'accept': 'application/json', 'Content-Type': 'application/json'}
     url = f'{api}/projects/{project}/repositories/{project_repo}/artifacts/{tag}/labels'
-    print(f'Url for adding the label: {url}')
+    print(f'Url for changing the label: {url}')
+    # Label being removed currently hardcoded
+    label_removed = 7  # pht_next id
+    print(f'Label to be removed: {label_removed}')
+    headers_remove = {'accept': 'application/json'}
     try:
-        response = requests.post(url, headers=headers, data=json.dumps(data),
+        response = requests.delete(f'{url}/{label_removed}', headers=headers_remove,
                                  auth=(username, password))
         response.raise_for_status()
-        return "Label is added"
+        print(f'Label with id "{label_removed}" has been removed.')
+    except requests.exceptions.HTTPError as e:
+        print(e.response.text)
+    except Exception as err:
+        print(err)
+
+    # Label being added currently hardcoded
+    label_added = {'id': 8}  # pht_terminate id
+    print(f'Label to be added: {label_added}')
+    headers_add = {'accept': 'application/json', 'Content-Type': 'application/json'}
+    try:
+        response = requests.post(url, headers=headers_add, data=json.dumps(label_added),
+                                 auth=(username, password))
+        response.raise_for_status()
+        print(f'Label with id "{label_added}" has been added.')
+        return
     except requests.exceptions.HTTPError as e:
         print(e.response.text)
         sys.exit()
