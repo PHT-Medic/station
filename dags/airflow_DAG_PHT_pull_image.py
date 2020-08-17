@@ -48,15 +48,18 @@ def execute_container(**context):
 
 
 def push_docker_image(**context):
-    repository, tag = [context['dag_run'].conf[_] for _ in ['repository', 'tag']]
+    conf = ['repository', 'tag', 'cmd', 'entrypoint']
+    repository, tag, cmd, entrypoint = [context['dag_run'].conf[_] for _ in conf]
     image = ':'.join([repository, tag])
-    #Push the image
+    # Run container again
     client = docker.from_env()
-    # Stop running container
-    print(client.container.logs().decode("utf-8"))
-    client.container.wait()
+    print(f"Running command {cmd}")
+    container = client.containers.run(image=image, command=cmd, detach=True, entrypoint=entrypoint)
+    # Pause running container
+    print(container.logs().decode("utf-8"))
+    container.wait()
     # Update recent image
-    image = client.container.commit(tag=tag, repository=repository)
+    image = container.commit(tag=tag, repository=repository)
     print(image.id)
     # Login needed?
     #client.login(username='***', password='***')
