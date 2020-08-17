@@ -53,9 +53,9 @@ def execute_container(**context):
 
 
 def put_harbor_label(**context):
-    # TODO integrate code, see:
     # https://redmine.medic.uni-tuebingen.de/issues/1733
-    # Assumption that project name and project_repository can be extracted from the repository path from the last two labels
+    # Assumption that project name and project_repository can be extracted from the repository path from the last two
+    # labels
     repository, tag = [context['dag_run'].conf[_] for _ in ['repository', 'tag']]
     project, project_repo = repository.split('/')[-2:]
     config = configparser.ConfigParser()
@@ -73,21 +73,21 @@ def put_harbor_label(**context):
     url = f'{api}/projects/{project}/repositories/{project_repo}/artifacts/{tag}/labels'
     print(f'Url for changing the label: {url}')
     # Label being removed currently hardcoded
-    label_removed = 7  # pht_next id
-    print(f'Label to be removed: {label_removed}')
-    headers_remove = {'accept': 'application/json'}
-    try:
-        response = requests.delete(f'{url}/{label_removed}', headers=headers_remove,
-                                 auth=(username, password))
-        response.raise_for_status()
-        print(f'Label with id "{label_removed}" has been removed.')
-    except requests.exceptions.HTTPError as e:
-        print(e.response.text)
-    except Exception as err:
-        print(err)
+    # label_removed = 7  # pht_next id
+    # print(f'Label to be removed: {label_removed}')
+    # headers_remove = {'accept': 'application/json'}
+    # try:
+    #     response = requests.delete(f'{url}/{label_removed}', headers=headers_remove,
+    #                                auth=(username, password))
+    #     response.raise_for_status()
+    #     print(f'Label with id "{label_removed}" has been removed.')
+    # except requests.exceptions.HTTPError as e:
+    #     print(e.response.text)
+    # except Exception as err:
+    #     print(err)
 
     # Label being added currently hardcoded
-    label_added = {'id': 8}  # pht_terminate id
+    label_added = {'id': 7}  # pht_next id
     print(f'Label to be added: {label_added}')
     headers_add = {'accept': 'application/json', 'Content-Type': 'application/json'}
     try:
@@ -97,8 +97,13 @@ def put_harbor_label(**context):
         print(f'Label with id "{label_added}" has been added.')
         return
     except requests.exceptions.HTTPError as e:
-        print(e.response.text)
-        sys.exit()
+        e_msg = e.response.json()
+        print(e_msg)
+        if e_msg['errors'][0]['code'] == 'CONFLICT' and 'is already added to the artifact' in e_msg['errors'][0]['message']:
+            print('Label has already been placed on the artifact')
+            return
+        else:
+            sys.exit()
     except Exception as err:
         print(err)
         sys.exit()
@@ -127,7 +132,7 @@ t4 = PythonOperator(
     python_callable=put_harbor_label,
     execution_timeout=datetime.timedelta(minutes=1),
     dag=dag,
-        )
+)
 
 
 t1 >> t2       >> t4
