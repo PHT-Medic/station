@@ -48,8 +48,19 @@ def execute_container(**context):
 
 
 def push_docker_image(**context):
-    # TODO integrate code here.
-    assert(False)  # This line will be removed.
+    repository, tag = [context['dag_run'].conf[_] for _ in ['repository', 'tag']]
+    image = ':'.join([repository, tag])
+    #Push the image
+    client = docker.from_env()
+    # Stop running container
+    client.containers.stop()
+    print(client.container.logs().decode("utf-8"))
+    # Update recent image
+    #images = client.images.list()
+    # Login needed?
+    #client.login(username='***', password='***')
+    for line in client.images.push(repository=repository, tag=tag, stream=False, decode=False):
+        print(line)
 
 
 t1 = PythonOperator(
