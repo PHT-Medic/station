@@ -53,10 +53,11 @@ def push_docker_image(**context):
     #Push the image
     client = docker.from_env()
     # Stop running container
-    client.containers.stop()
     print(client.container.logs().decode("utf-8"))
+    client.container.wait()
     # Update recent image
-    #images = client.images.list()
+    image = client.container.commit(tag=tag, repository=repository)
+    print(image.id)
     # Login needed?
     #client.login(username='***', password='***')
     for line in client.images.push(repository=repository, tag=tag, stream=False, decode=False):
