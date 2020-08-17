@@ -63,8 +63,9 @@ def push_docker_image(**context):
     print(image.id)
     # Login needed?
     #client.login(username='***', password='***')
-    for line in client.images.push(repository=repository, tag=tag, stream=False, decode=False):
-        print(line)
+    push_information = client.images.push(repository=repository, tag=tag,
+                                          stream=False, decode=False)
+    print(push_information)
 
 
 t1 = PythonOperator(
