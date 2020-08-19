@@ -41,13 +41,11 @@ def pull_docker_image(**context):
 def execute_container(**context):
     conf = ['repository', 'tag', 'cmd', 'entrypoint']
     repository, tag, cmd, entrypoint = [context['dag_run'].conf[_] for _ in conf]
-    environment = {}
     image = ':'.join([repository, tag])
     client = docker.from_env()
     print(f"Running command {cmd}")
-    if 'env' in context['dag_run'].conf.keys():
-        environment = context['dag_run'].conf['env']
-        print(f"Environment input for container: {environment}")
+    environment = context['dag_run'].conf['env'] if 'env' in context['dag_run'].conf.keys() else {}
+    print(f"Environment input for container: {environment}")
     container = client.containers.run(image=image, command=cmd, detach=True, entrypoint=entrypoint,
                                       environment=environment)
     print(container.logs().decode("utf-8"))
