@@ -62,7 +62,7 @@ def push_docker_image(**context):
     image = container.commit(tag=tag, repository=repository)
     print(image.id)
     # Login needed?
-    client.login(username='boette', password='Start123!', registry='https://harbor.pht.medic.uni-tuebingen.de/harbor/sign-in')
+    #client.login(username='***', password='***')
     for line in client.images.push(repository=repository, tag=tag, stream=False, decode=False):
         print(line)
 
