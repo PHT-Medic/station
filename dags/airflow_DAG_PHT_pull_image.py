@@ -55,6 +55,26 @@ def execute_container(**context):
         sys.exit()
 
 
+def push_docker_image(**context):
+    conf = ['repository', 'tag', 'cmd', 'entrypoint']
+    repository, tag, cmd, entrypoint = [context['dag_run'].conf[_] for _ in conf]
+    image = ':'.join([repository, tag])
+    # Run container again
+    client = docker.from_env()
+    print(f"Running command {cmd}")
+    container = client.containers.run(image=image, command=cmd, detach=True, entrypoint=entrypoint)
+    # Pause running container
+    print(container.logs().decode("utf-8"))
+    container.wait()
+    # Update recent image
+    image = container.commit(tag=tag, repository=repository)
+    print(image.id)
+    # Login needed?
+    client.login(username='boette', password='Start123!', registry='https://harbor.pht.medic.uni-tuebingen.de/harbor/sign-in')
+    for line in client.images.push(repository=repository, tag=tag, stream=False, decode=False):
+        print(line)
+
+
 def put_harbor_label(**context):
     # https://redmine.medic.uni-tuebingen.de/issues/1733
     # Assumption that project name and project_repository can be extracted from the repository path from the last two
@@ -129,6 +149,15 @@ t2 = PythonOperator(
 )
 
 
+t3 = PythonOperator(
+    task_id='push_docker_image',
+    provide_context=True,
+    python_callable=push_docker_image,
+    execution_timeout=datetime.timedelta(minutes=1),
+    dag=dag,
+        )
+
+
 t4 = PythonOperator(
     task_id='put_harbor_label',
     provide_context=True,
@@ -138,4 +167,4 @@ t4 = PythonOperator(
 )
 
 
-t1 >> t2       >> t4
+t1 >> t2 >> t3 >> t4
