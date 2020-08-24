@@ -6,3 +6,4 @@ rebuild.sh
 # Sphinx documentation
 docs/_build/
 .venv
+/dags/credentials.conf

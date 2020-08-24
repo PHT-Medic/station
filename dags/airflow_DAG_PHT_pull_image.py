@@ -3,6 +3,11 @@ import datetime
 import airflow
 import docker
 
+# TODO: Temporary solution! As mentioned by Lukas no use of primitives like requests.
+import configparser
+import requests
+import json
+
 from airflow.operators.python_operator import PythonOperator
 
 default_args = {
@@ -39,7 +44,10 @@ def execute_container(**context):
     image = ':'.join([repository, tag])
     client = docker.from_env()
     print(f"Running command {cmd}")
-    container = client.containers.run(image=image, command=cmd, detach=True, entrypoint=entrypoint)
+    environment = context['dag_run'].conf['env'] if 'env' in context['dag_run'].conf.keys() else {}
+    print(f"Environment input for container: {environment}")
+    container = client.containers.run(image=image, command=cmd, detach=True, entrypoint=entrypoint,
+                                      environment=environment)
     print(container.logs().decode("utf-8"))
     exit_code = container.wait()["StatusCode"]
     if exit_code != 0:
@@ -65,6 +73,63 @@ def push_docker_image(**context):
     client.login(username='boette', password='Start123!', registry='https://harbor.pht.medic.uni-tuebingen.de/harbor/sign-in')
     for line in client.images.push(repository=repository, tag=tag, stream=False, decode=False):
         print(line)
+
+
+def put_harbor_label(**context):
+    # https://redmine.medic.uni-tuebingen.de/issues/1733
+    # Assumption that project name and project_repository can be extracted from the repository path from the last two
+    # labels
+    repository, tag = [context['dag_run'].conf[_] for _ in ['repository', 'tag']]
+    project, project_repo = repository.split('/')[-2:]
+    config = configparser.ConfigParser()
+    conf_file = context['dag_run'].conf['conf']
+    print(f"Reading config file '{conf_file}':\n[credentials]\n"
+          "USERNAME = <USERNAME>\nPASSWORD = <PASSWORD>\n"
+          "API_URL = <HARBOR_API_URL>")
+    config.read(conf_file)
+    conf = ['API_URL', 'USERNAME', 'PASSWORD']
+    try:
+        api, username, password = [config["credentials"][_] for _ in conf]
+    except Exception as err:
+        print("Credentials could not be parsed.")
+        sys.exit()
+    url = f'{api}/projects/{project}/repositories/{project_repo}/artifacts/{tag}/labels'
+    print(f'Url for changing the label: {url}')
+    # Label being removed currently hardcoded
+    # label_removed = 7  # pht_next id
+    # print(f'Label to be removed: {label_removed}')
+    # headers_remove = {'accept': 'application/json'}
+    # try:
+    #     response = requests.delete(f'{url}/{label_removed}', headers=headers_remove,
+    #                                auth=(username, password))
+    #     response.raise_for_status()
+    #     print(f'Label with id "{label_removed}" has been removed.')
+    # except requests.exceptions.HTTPError as e:
+    #     print(e.response.text)
+    # except Exception as err:
+    #     print(err)
+
+    # Label being added currently hardcoded
+    label_added = {'id': 7}  # pht_next id
+    print(f'Label to be added: {label_added}')
+    headers_add = {'accept': 'application/json', 'Content-Type': 'application/json'}
+    try:
+        response = requests.post(url, headers=headers_add, data=json.dumps(label_added),
+                                 auth=(username, password))
+        response.raise_for_status()
+        print(f'Label with id "{label_added}" has been added.')
+        return
+    except requests.exceptions.HTTPError as e:
+        e_msg = e.response.json()
+        print(e_msg)
+        if e_msg['errors'][0]['code'] == 'CONFLICT' and 'is already added to the artifact' in e_msg['errors'][0]['message']:
+            print('Label has already been placed on the artifact')
+            return
+        else:
+            sys.exit()
+    except Exception as err:
+        print(err)
+        sys.exit()
 
 
 t1 = PythonOperator(
@@ -93,4 +158,13 @@ t3 = PythonOperator(
         )
 
 
-t1 >> t2 >> t3
+t4 = PythonOperator(
+    task_id='put_harbor_label',
+    provide_context=True,
+    python_callable=put_harbor_label,
+    execution_timeout=datetime.timedelta(minutes=1),
+    dag=dag,
+)
+
+
+t1 >> t2 >> t3 >> t4
