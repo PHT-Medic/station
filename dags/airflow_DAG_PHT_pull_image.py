@@ -43,6 +43,7 @@ def execute_container(**context):
     conf = ['repository', 'tag', 'cmd', 'entrypoint']
     repository, tag, cmd, entrypoint = [context['dag_run'].conf[_] for _ in conf]
     image = ':'.join([repository, tag])
+    # create name fro the container to be able to grab the container in later tasks
     container_name = f'{repository.split("/")[-1]}.{tag}'
     client = docker.from_env()
     print(f"Running command {cmd}")
@@ -59,9 +60,11 @@ def execute_container(**context):
 
 def rebase(**context):
     repository, tag = [context['dag_run'].conf[_] for _ in ['repository', 'tag']]
+    # Build container name from context to get executed container
     container_name = f'{repository.split("/")[-1]}.{tag}'
     base_image = ':'.join([repository, 'base'])
     client = docker.from_env(timeout=120)
+    # Grab the base image to rebase the train, only adds one layer in total and not one per station
     to_container = client.containers.create(base_image)
     updated_tag = 'updated'
 
@@ -77,6 +80,7 @@ def rebase(**context):
         tar_stream, _ = from_cont.get_archive(from_path)
         to_cont.put_archive(os.path.dirname(to_path), tar_stream)
 
+    # Extract added and updated files
     try:
         from_container = client.containers.get(container_name)
         files = from_container.diff()
@@ -95,8 +99,10 @@ def rebase(**context):
 
     print(f'Creating image: {repository}:{updated_tag}')
     print(type(to_container))
+    # Rebase the train
     try:
         img = to_container.commit(repository=repository, tag=updated_tag)
+        # remove executed containers -> only images needed from this point
         to_container.remove()
         from_container.remove()
     except Exception as err:
