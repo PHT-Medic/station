@@ -7,6 +7,7 @@ import docker
 import configparser
 import requests
 import json
+import os
 
 from airflow.operators.python_operator import PythonOperator
 
@@ -42,12 +43,13 @@ def execute_container(**context):
     conf = ['repository', 'tag', 'cmd', 'entrypoint']
     repository, tag, cmd, entrypoint = [context['dag_run'].conf[_] for _ in conf]
     image = ':'.join([repository, tag])
+    container_name = f'{repository.split("/")[-1]}.{tag}'
     client = docker.from_env()
     print(f"Running command {cmd}")
     environment = context['dag_run'].conf['env'] if 'env' in context['dag_run'].conf.keys() else {}
     print(f"Environment input for container: {environment}")
     container = client.containers.run(image=image, command=cmd, detach=True, entrypoint=entrypoint,
-                                      environment=environment)
+                                      environment=environment, name=container_name)
     print(container.logs().decode("utf-8"))
     exit_code = container.wait()["StatusCode"]
     if exit_code != 0:
@@ -55,24 +57,62 @@ def execute_container(**context):
         sys.exit()
 
 
+def rebase(**context):
+    repository, tag = [context['dag_run'].conf[_] for _ in ['repository', 'tag']]
+    container_name = f'{repository.split("/")[-1]}.{tag}'
+    base_image = ':'.join([repository, 'base'])
+    client = docker.from_env(timeout=120)
+    to_container = client.containers.create(base_image)
+    updated_tag = 'updated'
+
+    def _copy(from_cont, from_path, to_cont, to_path):
+        """
+        Copies a file from one container to another container
+        :param from_cont:
+        :param from_path:
+        :param to_cont:
+        :param to_path:
+        :return:
+        """
+        tar_stream, _ = from_cont.get_archive(from_path)
+        to_cont.put_archive(os.path.dirname(to_path), tar_stream)
+
+    try:
+        from_container = client.containers.get(container_name)
+        files = from_container.diff()
+    except Exception as err:
+        print(err)
+        sys.exit()
+
+    print('Copying new files into baseimage')
+    for file in files:
+        print(file)
+        _copy(from_cont=from_container,
+              from_path=file['Path'],
+              to_cont=to_container,
+              to_path=file['Path'])
+    print('Copied files into baseimage')
+
+    print(f'Creating image: {repository}:{updated_tag}')
+    print(type(to_container))
+    try:
+        img = to_container.commit(repository=repository, tag=updated_tag)
+        to_container.remove()
+        from_container.remove()
+    except Exception as err:
+        print(err)
+        sys.exit()
+
+
 def push_docker_image(**context):
-    conf = ['repository', 'tag', 'cmd', 'entrypoint']
-    repository, tag, cmd, entrypoint = [context['dag_run'].conf[_] for _ in conf]
-    image = ':'.join([repository, tag])
+    conf = ['repository', 'tag']
+    repository, tag = [context['dag_run'].conf[_] for _ in conf]
     # Run container again
     client = docker.from_env()
-    print(f"Running command {cmd}")
-    container = client.containers.run(image=image, command=cmd, detach=True, entrypoint=entrypoint)
-    # Pause running container
-    print(container.logs().decode("utf-8"))
-    container.wait()
-    # Update recent image
-    image = container.commit(tag=tag, repository=repository)
-    print(image.id)
     # Login needed?
-    client.login(username='boette', password='Start123!', registry='https://harbor.pht.medic.uni-tuebingen.de/harbor/sign-in')
-    for line in client.images.push(repository=repository, tag=tag, stream=False, decode=False):
-        print(line)
+    # client.login(username='boette', password='Start123!', registry='https://harbor.pht.medic.uni-tuebingen.de/harbor/sign-in')
+    response = client.images.push(repository=repository, tag='updated', stream=False, decode=False)
+    print(response)
 
 
 def put_harbor_label(**context):
@@ -80,6 +120,7 @@ def put_harbor_label(**context):
     # Assumption that project name and project_repository can be extracted from the repository path from the last two
     # labels
     repository, tag = [context['dag_run'].conf[_] for _ in ['repository', 'tag']]
+    tag = 'updated'
     project, project_repo = repository.split('/')[-2:]
     config = configparser.ConfigParser()
     conf_file = context['dag_run'].conf['conf']
@@ -150,15 +191,24 @@ t2 = PythonOperator(
 
 
 t3 = PythonOperator(
+    task_id='rebase',
+    provide_context=True,
+    python_callable=rebase,
+    execution_timeout=datetime.timedelta(minutes=2),
+    dag=dag,
+)
+
+
+t4 = PythonOperator(
     task_id='push_docker_image',
     provide_context=True,
     python_callable=push_docker_image,
     execution_timeout=datetime.timedelta(minutes=1),
     dag=dag,
-        )
+)
 
 
-t4 = PythonOperator(
+t5 = PythonOperator(
     task_id='put_harbor_label',
     provide_context=True,
     python_callable=put_harbor_label,
@@ -167,4 +217,4 @@ t4 = PythonOperator(
 )
 
 
-t1 >> t2 >> t3 >> t4
+t1 >> t2 >> t3 >> t4 >> t5
