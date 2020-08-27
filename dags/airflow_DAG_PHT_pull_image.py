@@ -32,11 +32,15 @@ def pull_docker_image(**context):
     # Pull the image.
     client = docker.from_env()
     client.images.pull(repository=repository, tag=tag)
+    # Pull base image as well
+    client.images.pull(repository=repository, tag='base')
     # Make sure the image with the desired tag is there.
     images = client.images.list()
     image_tags = sum([i.tags for i in images], [])
     assert(':'.join([repository, tag]) in image_tags)
     print("Image was successfully pulled.")
+    assert(':'.join([repository, 'base']) in image_tags)
+    print("Baseimage was successfully pulled.")
 
 
 def execute_container(**context):
@@ -103,6 +107,7 @@ def rebase(**context):
     try:
         img = to_container.commit(repository=repository, tag=updated_tag)
         # remove executed containers -> only images needed from this point
+        print('Removing containers')
         to_container.remove()
         from_container.remove()
     except Exception as err:
