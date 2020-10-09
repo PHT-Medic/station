@@ -162,7 +162,8 @@ def put_harbor_label(**context):
     #     print(err)
 
     # Label being added currently hardcoded
-    label_added = {'id': 7}  # pht_next id
+    # label_added = {'id': 7}  # pht_next id Wissenschaftsnetz
+    label_added = {'id': 2}  # pht_next id de.NBI cloud
     print(f'Label to be added: {label_added}')
     headers_add = {'accept': 'application/json', 'Content-Type': 'application/json'}
     try:
