@@ -3,7 +3,6 @@ import datetime
 import airflow
 import docker
 
-# TODO: Temporary solution! As mentioned by Lukas no use of primitives like requests.
 import configparser
 import requests
 import json
@@ -70,7 +69,7 @@ def rebase(**context):
     client = docker.from_env(timeout=120)
     # Grab the base image to rebase the train, only adds one layer in total and not one per station
     to_container = client.containers.create(base_image)
-    updated_tag = 'updated'
+    updated_tag = tag
 
     def _copy(from_cont, from_path, to_cont, to_path):
         """
@@ -122,7 +121,7 @@ def push_docker_image(**context):
     client = docker.from_env()
     # Login needed?
     # client.login(username='boette', password='Start123!', registry='https://harbor.pht.medic.uni-tuebingen.de/harbor/sign-in')
-    response = client.images.push(repository=repository, tag='updated', stream=False, decode=False)
+    response = client.images.push(repository=repository, tag=tag, stream=False, decode=False)
     print(response)
 
 
@@ -131,7 +130,6 @@ def put_harbor_label(**context):
     # Assumption that project name and project_repository can be extracted from the repository path from the last two
     # labels
     repository, tag = [context['dag_run'].conf[_] for _ in ['repository', 'tag']]
-    tag = 'updated'
     project, project_repo = repository.split('/')[-2:]
     config = configparser.ConfigParser()
     conf_file = context['dag_run'].conf['conf']
@@ -147,19 +145,6 @@ def put_harbor_label(**context):
         sys.exit()
     url = f'{api}/projects/{project}/repositories/{project_repo}/artifacts/{tag}/labels'
     print(f'Url for changing the label: {url}')
-    # Label being removed currently hardcoded
-    # label_removed = 7  # pht_next id
-    # print(f'Label to be removed: {label_removed}')
-    # headers_remove = {'accept': 'application/json'}
-    # try:
-    #     response = requests.delete(f'{url}/{label_removed}', headers=headers_remove,
-    #                                auth=(username, password))
-    #     response.raise_for_status()
-    #     print(f'Label with id "{label_removed}" has been removed.')
-    # except requests.exceptions.HTTPError as e:
-    #     print(e.response.text)
-    # except Exception as err:
-    #     print(err)
 
     # Label being added currently hardcoded
     # label_added = {'id': 7}  # pht_next id Wissenschaftsnetz
