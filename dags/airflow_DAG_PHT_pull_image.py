@@ -191,7 +191,7 @@ t3 = PythonOperator(
     task_id='rebase',
     provide_context=True,
     python_callable=rebase,
-    execution_timeout=datetime.timedelta(minutes=2),
+    execution_timeout=datetime.timedelta(minutes=5),
     dag=dag,
 )
 
