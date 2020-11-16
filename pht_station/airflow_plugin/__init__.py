@@ -46,7 +46,7 @@ class TestView(BaseView):
     @expose('/')
     def test(self):
         # in this example, put your test_plugin/test.html template at airflow/plugins/templates/test_plugin/test.html
-        return self.render("test_plugin/test.html", content="Hello galaxy!")
+        return self.render("base.html", content="Hello galaxy!")
 
 
 v = TestView(category="Test Plugin", name="Test View")
