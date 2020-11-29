@@ -43,6 +43,7 @@ RUN apt-get update -yqq \
           ${AIRFLOW_USER_HOME}/plugins/static/ \
     && cp ${PHT_STATION_AIRFLOW_STATIC}/sort_desc.png \
           ${AIRFLOW_USER_HOME}/plugins/static/ \
+    && pip install git+https://gitlab.com/PersonalHealthTrain/implementations/germanmii/difuture/train-container-library.git \
     # Image cleanup
     && apt-get purge --auto-remove -yqq \
         build-essential \
