@@ -66,7 +66,7 @@ of this distribution are:
 8. Run `docker-compose build --no-cache --pull` 
 
 9. Edit the variable `sql_alchemy_conn` in `config/airflow.cfg` to reflect your Postgres configuration and make sure
-    that this is consistent with the `docker-compose.yml` file
+    that this is consistent with the `docker-compose.yml` file. Edit values such as `STATION_ID` (must me matching to Harbor and Vault) and `private key` of the station within the `docker-compose.yml` file 
 
 ## First Steps with Running Airflow
 1. Run `docker-compose up -d`. 
