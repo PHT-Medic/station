@@ -66,7 +66,22 @@ of this distribution are:
 8. Run `docker-compose build --no-cache --pull` 
 
 9. Edit the variable `sql_alchemy_conn` in `config/airflow.cfg` to reflect your Postgres configuration and make sure
-    that this is consistent with the `docker-compose.yml` file. Edit values such as `STATION_ID` (must me matching to Harbor and Vault) and `private key` of the station within the `docker-compose.yml` file 
+    that this is consistent with the `docker-compose.yml` file
+    
+## Setting up the station environment
+1. Open the `docker-compose.yml` file and edit the following values to match the local environment.   
+    In the the volumes section of the airflow service edit the the last volume to match the path to the locally stored
+    private key in PEM Format.
+    ```
+    - <station key path>:/opt/private_key.pem
+    ```
+2. Then edit the following environment variables to match the local configuration. STATION_ID must be consitent to Vault and Harbor.
+    - `FHIR_ADDRESS`
+    - `FHIR_USER`
+    - `FHIR_PW`
+    - `HARBOR_USER`
+    - `HARBOR_PW`
+    - `STATION_ID`
 
 ## First Steps with Running Airflow
 1. Run `docker-compose up -d`. 
