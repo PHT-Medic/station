@@ -72,7 +72,7 @@ def execute_container(**context):
         # Run container with default command and entrypoint
         print("Running with default command")
         container = client.containers.run(image, environment=environment,
-                                          name=container_name, detach=True)
+                                          name=container_name, detach=True, auto_remove=True)
     exit_code = container.wait()["StatusCode"]
     container.commit(repository=repository, tag=tag)
     print(container.logs().decode("utf-8"))

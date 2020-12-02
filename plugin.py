@@ -1,6 +1,6 @@
 import flask
 from airflow.plugins_manager import AirflowPlugin
-from pht_station.airflow_plugin import \
+from pht_station import \
     QuickExecution,\
     Registry, \
     RunningTrains, \

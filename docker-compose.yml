@@ -35,17 +35,20 @@ services:
             - /var/run/docker.sock:/var/run/docker.sock
             - ./www/templates:/usr/local/airflow/plugins/templates
             - ./pht_station:/opt/pythonpath/pht_station
-            - ./private_key.pem:/opt/private_key.pem # specify local private key path
+            - ./station_leipzig_private_key.pem:/opt/private_key.pem # specify local private key path
         environment:
             - LOAD_EX=n      # Do not load example DAGS
             - EXECUTOR=Local
             - POSTGRES_HOST=db
-            - PHT_STATION_REGISTY_HOSTNAME=harbor.lukaszimmermann.dev
             - PYTHONPATH=/opt/pythonpath
+            - FHIR_ADDRESS=fhir.personalhealhtrain.de
+            - FHIR_USER=fhiruser
+            - FHIR_PW=PhT-Fhir
+            - HARBOR_USER=graf
+            - HARBOR_PW=Start123!
+            - STATION_ID=2
             - STATION_PRIVATE_KEY_PATH=/opt/private_key.pem
-            - STATION_ID=id
-            - HARBOR_PW=user_pw
-            - HARBOR_USER=username
+            - HARBOR_API_URL=https://harbor.personalhealthtrain.de/api/v2.0
         depends_on:
           - db
           - redis

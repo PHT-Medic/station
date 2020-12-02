@@ -1,10 +1,13 @@
-from .internal import Base
 import sqlalchemy as sa
-from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy.ext.declarative import declared_attr, declarative_base
 from datetime import datetime
+
+Base = declarative_base()
 
 
 class Train(Base):
+    __tablename__ = "train"
+
     id = sa.Column(sa.Integer, primary_key=True)
     train_id = sa.Column(sa.String(200), unique=True, nullable=False)
     created_at = sa.Column(sa.DateTime(), default=datetime.now(), nullable=False)

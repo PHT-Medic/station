@@ -1,12 +1,11 @@
-from .internal import Base
 import sqlalchemy as sa
-from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
+
+Base = declarative_base()
 
 
 class TrainState(Base):
-    @declared_attr
-    def __tablename__(cls):
-        return "train_state"
+    __tablename__ = "train_state"
     id = sa.Column(sa.Integer, primary_key=True)
     state = sa.Column(sa.String(), nullable=True)
