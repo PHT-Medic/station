@@ -3,7 +3,7 @@ import types
 import typing
 
 import sqlalchemy as sa
-from pht_station.db_util import provide_session
+from pht_station.airflow_plugin.db_util import provide_session
 from .internal import Base
 
 

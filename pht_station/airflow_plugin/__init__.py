@@ -13,6 +13,7 @@ from airflow.models.baseoperator import BaseOperatorLink
 from airflow.sensors.base_sensor_operator import BaseSensorOperator
 from airflow.executors.base_executor import BaseExecutor
 from flask_appbuilder import BaseView as AppBuilderBaseView
+from .menu_links.train_menu_link import TrainMenuLink
 
 
 # Will show up under airflow.hooks.test_plugin.PluginHook
@@ -45,11 +46,13 @@ def plugin_macro():
 class TestView(BaseView):
     @expose('/')
     def test(self):
+        # TODO get trains in harbor
         # in this example, put your test_plugin/test.html template at airflow/plugins/templates/test_plugin/test.html
         return self.render("base.html", content="Hello galaxy!")
 
 
 v = TestView(category="Test Plugin", name="Test View")
+
 
 # Creating a flask blueprint to integrate the templates and static folder
 bp = Blueprint(
@@ -62,6 +65,12 @@ ml = MenuLink(
     category='Test Plugin',
     name='Test Menu Link',
     url='https://airflow.apache.org/')
+
+train_ml = MenuLink(
+    category="PHT",
+    name="pht",
+    url='https://airflow.apache.org/'
+)
 
 
 # Creating a flask appbuilder BaseView
@@ -103,7 +112,7 @@ class AirflowTestPlugin(AirflowPlugin):
     macros = [plugin_macro]
     admin_views = [v]
     flask_blueprints = [bp]
-    menu_links = [ml]
+    menu_links = [ml, train_ml]
     appbuilder_views = [v_appbuilder_package]
     appbuilder_menu_items = [appbuilder_mitem]
     global_operator_extra_links = [GoogleLink(), ]

@@ -174,6 +174,8 @@ def put_harbor_label(**context):
     # https://redmine.medic.uni-tuebingen.de/issues/1733
     # Assumption that project name and project_repository can be extracted from the repository path from the last two
     # labels
+
+    # TODO change to use environment variables
     repository, tag = [context['dag_run'].conf[_] for _ in ['repository', 'tag']]
     project, project_repo = repository.split('/')[-2:]
     config = configparser.ConfigParser()

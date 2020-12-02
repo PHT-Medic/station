@@ -5,7 +5,7 @@ from sqlalchemy.ext.declarative import declared_attr
 
 from pht_trainlib.util import timestamp_now
 
-from pht_station.db_util import open_session
+from pht_station.airflow_plugin.db_util import open_session
 from .internal import Base
 
 

@@ -4,6 +4,7 @@ import json
 import airflow
 import airflow.utils.db
 import os
+from dotenv import load_dotenv, find_dotenv
 
 
 #
@@ -44,7 +45,7 @@ def create_connections(session):
     postgres_station = airflow.models.Connection(
         conn_id=f'pht_station_all_{conn_type_postgres}_station_db',
         conn_type=conn_type_postgres,
-        host='db',
+        host='localhost',  # TODO change this back to db
         port=5432,
         login='station',
         schema='station',    # Maps to Database in Postgres
@@ -62,4 +63,5 @@ def setup_connections(session=None):
 
 
 if __name__ == '__main__':
+    load_dotenv(find_dotenv())
     setup_connections()

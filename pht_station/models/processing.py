@@ -2,7 +2,7 @@ import sqlalchemy as sa
 from sqlalchemy.ext.declarative import declared_attr
 
 from .internal import Base
-from pht_station.db_util import provide_session
+from pht_station.airflow_plugin.db_util import provide_session
 
 _STATE_CREATED = 1
 
