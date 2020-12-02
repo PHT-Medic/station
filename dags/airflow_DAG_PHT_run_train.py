@@ -178,18 +178,21 @@ def put_harbor_label(**context):
     # TODO change to use environment variables
     repository, tag = [context['dag_run'].conf[_] for _ in ['repository', 'tag']]
     project, project_repo = repository.split('/')[-2:]
-    config = configparser.ConfigParser()
-    conf_file = context['dag_run'].conf['conf']
-    print(f"Reading config file '{conf_file}':\n[credentials]\n"
-          "USERNAME = <USERNAME>\nPASSWORD = <PASSWORD>\n"
-          "API_URL = <HARBOR_API_URL>")
-    config.read(conf_file)
-    conf = ['API_URL', 'USERNAME', 'PASSWORD']
-    try:
-        api, username, password = [config["credentials"][_] for _ in conf]
-    except Exception as err:
-        print("Credentials could not be parsed.")
-        sys.exit()
+    # config = configparser.ConfigParser()
+    # conf_file = context['dag_run'].conf['conf']
+    # print(f"Reading config file '{conf_file}':\n[credentials]\n"
+    #       "USERNAME = <USERNAME>\nPASSWORD = <PASSWORD>\n"
+    #       "API_URL = <HARBOR_API_URL>")
+    # config.read(conf_file)
+    # conf = ['API_URL', 'USERNAME', 'PASSWORD']
+    # try:
+    #     api, username, password = [config["credentials"][_] for _ in conf]
+    # except Exception as err:
+    #     print("Credentials could not be parsed.")
+    #     sys.exit()
+    api = os.getenv("HARBOR_API_URL")
+    username = os.getenv("HARBOR_USER")
+    password = os.getenv("HARBOR_PW")
     url = f'{api}/projects/{project}/repositories/{project_repo}/artifacts/{tag}/labels'
     print(f'Url for changing the label: {url}')
 
