@@ -75,7 +75,7 @@ of this distribution are:
     ```
     - <station key path>:/opt/private_key.pem
     ```
-2. Then edit the following environment variables to match the local configuration
+2. Then edit the following environment variables to match the local configuration. STATION_ID must be consitent to Vault and Harbor.
     - `FHIR_ADDRESS`
     - `FHIR_USER`
     - `FHIR_PW`
