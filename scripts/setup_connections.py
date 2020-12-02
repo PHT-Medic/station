@@ -3,6 +3,8 @@ import json
 
 import airflow
 import airflow.utils.db
+import os
+
 
 #
 # def _get_station_ids_to_create() -> typing.Iterable[int]:
@@ -27,16 +29,15 @@ def drop_all_connections(session):
 
 
 def create_connections(session):
-    conn_type_docker = 'docker'
     conn_type_postgres = 'postgres'
 
     # The container registry for pulling images
     container_registry = airflow.models.Connection(
-        conn_id=f'pht_station_all_{conn_type_docker}_container_registry',
+        conn_id=f'pht_station_{os.getenv("STATION_ID")}_harbor',
         conn_type='docker',
-        host='harbor.lukaszimmermann.dev',
-        login='foo',
-        password='bar',
+        host='harbor.personalhealthtrain.de',
+        login=os.getenv("HARBOR_USER"),
+        password=os.getenv("HARBOR_PW"),
         schema='https')
 
     # Postgres database for the Station

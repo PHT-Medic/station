@@ -73,9 +73,9 @@ def execute_container(**context):
         print("Running with default command")
         container = client.containers.run(image, environment=environment,
                                           name=container_name, detach=True)
-
-    print(container.logs().decode("utf-8"))
     exit_code = container.wait()["StatusCode"]
+    container.commit(repository=repository, tag=tag)
+    print(container.logs().decode("utf-8"))
     if exit_code != 0:
         print(f"The command {cmd} resulted in a non-zero exit code: {exit_code}")
         sys.exit()
@@ -91,12 +91,14 @@ def post_run_protocol(**context):
 def rebase(**context):
     repository, tag = [context['dag_run'].conf[_] for _ in ['repository', 'tag']]
     # Build container name from context to get executed container
-    container_name = f'{repository.split("/")[-1]}.{tag}'
+    # container_name = f'{repository.split("/")[-1]}.{tag}'
     base_image = ':'.join([repository, 'base'])
     client = docker.from_env(timeout=120)
     # Grab the base image to rebase the train, only adds one layer in total and not one per station
     to_container = client.containers.create(base_image)
     updated_tag = tag
+
+    # TODO only copy the results directory + train_config.json
 
     def _copy(from_cont, from_path, to_cont, to_path):
         """
@@ -110,28 +112,43 @@ def rebase(**context):
         tar_stream, _ = from_cont.get_archive(from_path)
         to_cont.put_archive(os.path.dirname(to_path), tar_stream)
 
+    from_container = client.containers.create(f"{repository}:latest")
     # Extract added and updated files
-    try:
-        from_container = client.containers.get(container_name)
-        files = from_container.diff()
-    except Exception as err:
-        print(err)
-        sys.exit()
+    # try:
+    #     from_container = client.containers.create(f"{repository}:latest")
+    #     files = from_container.diff()
+    # except Exception as err:
+    #     print(err)
+    #     sys.exit()
 
-    print('Copying new files into baseimage')
-    for file in files:
-        print(file)
-        _copy(from_cont=from_container,
-              from_path=file['Path'],
-              to_cont=to_container,
-              to_path=file['Path'])
+    # print('Copying new files into baseimage')
+    # for file in files:
+    #     print(file)
+    #     _copy(from_cont=from_container,
+    #           from_path=file['Path'],
+    #           to_cont=to_container,
+    #           to_path=file['Path'])
+
+    # Copy results to base image
+    _copy(from_cont=from_container,
+          from_path="/opt/pht_results",
+          to_cont=to_container,
+          to_path="/opt/pht_results")
+
+    # Hardcoded copying of train_config.json
+    # TODO improve this
+    _copy(from_cont=from_container,
+          from_path="/opt/train_config.json",
+          to_cont=to_container,
+          to_path="/opt/train_config.json")
+
     print('Copied files into baseimage')
 
     print(f'Creating image: {repository}:{updated_tag}')
     print(type(to_container))
     # Rebase the train
     try:
-        img = to_container.commit(repository=repository, tag=updated_tag)
+        img = to_container.commit(repository=repository, tag="base")
         # remove executed containers -> only images needed from this point
         print('Removing containers')
         to_container.remove()
@@ -148,6 +165,7 @@ def push_docker_image(**context):
     client = docker.from_env()
     # Login needed?
     # client.login(username='boette', password='Start123!', registry='https://harbor.pht.medic.uni-tuebingen.de/harbor/sign-in')
+    # TODO error handling
     response = client.images.push(repository=repository, tag=tag, stream=False, decode=False)
     print(response)
 
@@ -230,13 +248,13 @@ t4 = PythonOperator(
     dag=dag
 )
 
-t5 = PythonOperator(
-    task_id='rebase',
-    provide_context=True,
-    python_callable=rebase,
-    execution_timeout=datetime.timedelta(minutes=5),
-    dag=dag,
-)
+# t5 = PythonOperator(
+#     task_id='rebase',
+#     provide_context=True,
+#     python_callable=rebase,
+#     execution_timeout=datetime.timedelta(minutes=5),
+#     dag=dag,
+# )
 
 t6 = PythonOperator(
     task_id='push_docker_image',
@@ -256,4 +274,4 @@ t7 = PythonOperator(
 )
 
 
-t1 >> t2 >> t3 >> t4 >> t5 >> t6 >> t7
+t1 >> t2 >> t3 >> t4 >> t6 >> t7
