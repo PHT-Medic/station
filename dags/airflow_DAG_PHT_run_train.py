@@ -3,10 +3,11 @@ import datetime
 import airflow
 import docker
 
-import configparser
 import requests
 import json
 import os
+
+from docker.errors import APIError
 from train_lib.docker_util.docker_ops import extract_train_config
 from train_lib.security.SecurityProtocol import SecurityProtocol
 
@@ -24,7 +25,6 @@ default_args = {
     'retry_delay': datetime.timedelta(minutes=5),
 }
 
-
 dag = airflow.DAG(dag_id='run_train', default_args=default_args, schedule_interval=None)
 
 
@@ -38,9 +38,9 @@ def pull_docker_image(**context):
     # Make sure the image with the desired tag is there.
     images = client.images.list()
     image_tags = sum([i.tags for i in images], [])
-    assert(':'.join([repository, tag]) in image_tags)
+    assert (':'.join([repository, tag]) in image_tags)
     print("Image was successfully pulled.")
-    assert(':'.join([repository, 'base']) in image_tags)
+    assert (':'.join([repository, 'base']) in image_tags)
     print("Baseimage was successfully pulled.")
 
 
@@ -66,19 +66,37 @@ def execute_container(**context):
     if cmd and entrypoint:
         # Run container with a specified command and entrypoint
         print("Running with custom entrypoint")
-        container = client.containers.run(image=image, command=cmd, detach=True, entrypoint=entrypoint,
-                                          environment=environment, name=container_name)
+        try:
+            container = client.containers.run(image=image, command=cmd, detach=True, entrypoint=entrypoint,
+                                              environment=environment, name=container_name)
+
+        # If the container is already in use remove it
+        except APIError as e:
+            print(e)
+            client.containers.remove(container_name)
+            container = client.containers.run(image=image, command=cmd, detach=True, entrypoint=entrypoint,
+                                              environment=environment, name=container_name)
+
     else:
         # Run container with default command and entrypoint
         print("Running with default command")
-        container = client.containers.run(image, environment=environment,
-                                          name=container_name, detach=True, auto_remove=True)
+        try:
+            container = client.containers.run(image, environment=environment,
+                                              name=container_name, detach=True)
+        # If the container is already in use remove it
+        except APIError as e:
+            print(e)
+            client.containers.remove(container_name)
+            container = client.containers.run(image, environment=environment,
+                                              name=container_name, detach=True)
+
     exit_code = container.wait()["StatusCode"]
     container.commit(repository=repository, tag=tag)
     print(container.logs().decode("utf-8"))
     if exit_code != 0:
         print(f"The command {cmd} resulted in a non-zero exit code: {exit_code}")
         sys.exit()
+
 
 def post_run_protocol(**context):
     repository, tag = [context['dag_run'].conf[_] for _ in ['repository', 'tag']]
@@ -164,7 +182,8 @@ def push_docker_image(**context):
     # Run container again
     client = docker.from_env()
     # Login needed?
-    # client.login(username='boette', password='Start123!', registry='https://harbor.pht.medic.uni-tuebingen.de/harbor/sign-in')
+    client.login(username=os.getenv("HARBOR_USER"), password=os.getenv("HARBOR_PW"),
+                 registry='harbor.personalhealthtrain.de')
     # TODO error handling
     response = client.images.push(repository=repository, tag=tag, stream=False, decode=False)
     print(response)
@@ -210,7 +229,8 @@ def put_harbor_label(**context):
     except requests.exceptions.HTTPError as e:
         e_msg = e.response.json()
         print(e_msg)
-        if e_msg['errors'][0]['code'] == 'CONFLICT' and 'is already added to the artifact' in e_msg['errors'][0]['message']:
+        if e_msg['errors'][0]['code'] == 'CONFLICT' and 'is already added to the artifact' in e_msg['errors'][0][
+            'message']:
             print('Label has already been placed on the artifact')
             return
         else:
@@ -227,7 +247,6 @@ t1 = PythonOperator(
     dag=dag,
 )
 
-
 t2 = PythonOperator(
     task_id="pre-run_protocol",
     provide_context=True,
@@ -243,7 +262,6 @@ t3 = PythonOperator(
     execution_timeout=datetime.timedelta(minutes=1),
     dag=dag,
 )
-
 
 t4 = PythonOperator(
     task_id="post-run_protocol",
@@ -269,7 +287,6 @@ t6 = PythonOperator(
     dag=dag,
 )
 
-
 t7 = PythonOperator(
     task_id='put_harbor_label',
     provide_context=True,
@@ -277,6 +294,5 @@ t7 = PythonOperator(
     execution_timeout=datetime.timedelta(minutes=1),
     dag=dag,
 )
-
 
 t1 >> t2 >> t3 >> t4 >> t6 >> t7
