@@ -75,7 +75,7 @@ of this distribution are:
     ```
     - <station key path>:/opt/private_key.pem
     ```
-2. Then edit the following environment variables to match the local configuration. STATION_ID must be consitent to Vault and Harbor.
+2. Then edit the following environment variables to match the local configuration. STATION_ID must be consistent to Vault and Harbor.
     - `FHIR_ADDRESS`
     - `FHIR_USER`
     - `FHIR_PW`
@@ -90,13 +90,13 @@ of this distribution are:
 4. Run the DAG `test_docker` to see whether DAGs generally have access to the Docker daemon.
 
 
-
+<!-- 
 ## RESTful API for Trains
 The Station offers an RESTful API that can be consumed by Trains. The documentation of this API is available on Swagger Hub:
 
 https://app.swaggerhub.com/apis/lukaszimmermann/PHT-Train-Station/0.2.0
+-->
 
-
-The [Train Container Library](https://gitlab.com/PersonalHealthTrain/implementations/germanmii/difuture/train-container-library) makes
-consuming this API easy.
+The [Train Container Library](https://gitlab.com/PersonalHealthTrain/implementations/germanmii/difuture/train-container-library)
+is used for processing in the DAGs.
 

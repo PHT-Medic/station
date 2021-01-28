@@ -42,10 +42,10 @@ services:
             - POSTGRES_HOST=db
             - PYTHONPATH=/opt/pythonpath
             - FHIR_ADDRESS=https://fhir.personalhealhtrain.de
-            - FHIR_USER=<fhir_user>
-            - FHIR_PW=PhT-<fhir_pw>
-            - HARBOR_USER=<harbor_user>
-            - HARBOR_PW=<harbor_pw>
+            - FHIR_USER=fhiruser
+            - FHIR_PW=
+            - HARBOR_USER=
+            - HARBOR_PW=
             - STATION_ID=1
             - STATION_PRIVATE_KEY_PATH=/opt/private_key.pem
             - HARBOR_API_URL=https://harbor.personalhealthtrain.de/api/v2.0
