@@ -32,6 +32,8 @@ def pull_docker_image(**context):
     repository, tag = [context['dag_run'].conf[_] for _ in ['repository', 'tag']]
     # Pull the image.
     client = docker.from_env()
+    client.login(username=os.getenv("HARBOR_USER"), password=os.getenv("HARBOR_PW"),
+                 registry='harbor.personalhealthtrain.de')
     client.images.pull(repository=repository, tag=tag)
     # Pull base image as well
     client.images.pull(repository=repository, tag='base')
@@ -48,7 +50,9 @@ def pre_run_protocol(**context):
     repository, tag = [context['dag_run'].conf[_] for _ in ['repository', 'tag']]
     img = repository + ":" + tag
     config = extract_train_config(img)
+    print(os.getenv("STATION_ID"))
     sp = SecurityProtocol(os.getenv("STATION_ID"), config=config)
+    print(os.getenv("STATION_PRIVATE_KEY_PATH"))
     sp.pre_run_protocol(img=img, private_key_path=os.getenv("STATION_PRIVATE_KEY_PATH"))
 
 
@@ -61,33 +65,34 @@ def execute_container(**context):
     client = docker.from_env()
     print(f"Running command {cmd}")
     environment = context['dag_run'].conf['env'] if 'env' in context['dag_run'].conf.keys() else {}
+    volume = context['dag_run'].conf['vol'] if 'vol' in context['dag_run'].conf.keys() else {}
     print(f"Environment input for container: {environment}")
-
+    print(f"Volume input for container: {volume}")
     if cmd and entrypoint:
         # Run container with a specified command and entrypoint
         print("Running with custom entrypoint")
         try:
             container = client.containers.run(image=image, command=cmd, detach=True, entrypoint=entrypoint,
-                                              environment=environment, name=container_name)
+                                              volumes=volume, environment=environment, name=container_name)
 
         # If the container is already in use remove it
         except APIError as e:
             print(e)
             client.containers.remove(container_name)
             container = client.containers.run(image=image, command=cmd, detach=True, entrypoint=entrypoint,
-                                              environment=environment, name=container_name)
+                                              volumes=volume, environment=environment, name=container_name)
 
     else:
         # Run container with default command and entrypoint
         print("Running with default command")
         try:
-            container = client.containers.run(image, environment=environment,
+            container = client.containers.run(image, environment=environment, volumes=volume,
                                               name=container_name, detach=True)
         # If the container is already in use remove it
         except APIError as e:
             print(e)
             client.containers.remove(container_name)
-            container = client.containers.run(image, environment=environment,
+            container = client.containers.run(image, environment=environment, volumes=volume,
                                               name=container_name, detach=True)
 
     exit_code = container.wait()["StatusCode"]
