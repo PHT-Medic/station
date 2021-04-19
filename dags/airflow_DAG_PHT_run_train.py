@@ -33,7 +33,7 @@ def pull_docker_image(**context):
     # Pull the image.
     client = docker.from_env()
     client.login(username=os.getenv("HARBOR_USER"), password=os.getenv("HARBOR_PW"),
-                 registry='harbor.personalhealthtrain.de')
+                 registry='harbor.pht.medic.uni-tuebingen.de')
     client.images.pull(repository=repository, tag=tag)
     # Pull base image as well
     client.images.pull(repository=repository, tag='base')
@@ -188,7 +188,7 @@ def push_docker_image(**context):
     client = docker.from_env()
     # Login needed?
     client.login(username=os.getenv("HARBOR_USER"), password=os.getenv("HARBOR_PW"),
-                 registry='harbor.personalhealthtrain.de')
+                 registry='harbor.pht.medic.uni-tuebingen.de')
     # TODO error handling
     response = client.images.push(repository=repository, tag=tag, stream=False, decode=False)
     print(response)
