@@ -82,7 +82,7 @@ fi
 case "$1" in
   webserver)
       airflow initdb
-      python /usr/local/airflow/bin/setup_connections.py
+      python /usr/local/airflow/bin/airflow_setup.py
 
     if [ "$AIRFLOW__CORE__EXECUTOR" = "LocalExecutor" ] || [ "$AIRFLOW__CORE__EXECUTOR" = "SequentialExecutor" ]; then
       # With the "Local" and "Sequential" executors it should all run in one container.

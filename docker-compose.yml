@@ -49,6 +49,8 @@ services:
             - STATION_ID=1
             - STATION_PRIVATE_KEY_PATH=/opt/private_key.pem
             - HARBOR_API_URL=https://harbor.personalhealthtrain.de/api/v2.0
+            - AIRFLOW_USER=admin
+            - AIRFLOW_PW=admin
         depends_on:
           - db
           - redis

@@ -3,6 +3,8 @@ import json
 
 import airflow
 import airflow.utils.db
+from airflow import models
+from airflow.contrib.auth.backends.password_auth import PasswordUser
 import os
 from dotenv import load_dotenv, find_dotenv
 
@@ -55,13 +57,23 @@ def create_connections(session):
         postgres_station
     ])
 
+def create_user(session):
+    user = PasswordUser(models.User())
+    user.username = os.getenv("AIRFLOW_USER", "admin")
+    user.email = 'user@example.com'
+    user.password = os.getenv("AIRFLOW_PW", "admin")
+    print("Created default user: " + user.username + " pw: " + user.password)
+    session.add(user)
+    session.commit()
+
 
 @airflow.utils.db.provide_session
-def setup_connections(session=None):
+def setup_airflow(session=None):
     drop_all_connections(session)
     create_connections(session)
+    create_user(session)
 
 
 if __name__ == '__main__':
     load_dotenv(find_dotenv())
-    setup_connections()
+    setup_airflow()

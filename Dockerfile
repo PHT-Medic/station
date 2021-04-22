@@ -63,10 +63,9 @@ FROM airflow_base
 COPY www/static/select.dataTables.min.css www/static/dataTables.select.min.js ${PHT_STATION_AIRFLOW_STATIC}/
 COPY www/templates ${AIRFLOW_USER_HOME}/plugins/templates
 
-COPY scripts/entrypoint.sh scripts/setup_connections.py ${AIRFLOW_USER_HOME}/bin/
+COPY scripts/entrypoint.sh scripts/airflow_setup.py ${AIRFLOW_USER_HOME}/bin/
 COPY config/airflow.cfg ${AIRFLOW_USER_HOME}/airflow.cfg
 COPY dags ${AIRFLOW_USER_HOME}/dags
-COPY pht_station/airflow_plugin ${AIRFLOW_USER_HOME}/airflow_plugin
 
 WORKDIR ${AIRFLOW_USER_HOME}
 ENTRYPOINT ["/usr/local/airflow/bin/entrypoint.sh"]
