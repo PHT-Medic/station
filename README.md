@@ -82,12 +82,15 @@ of this distribution are:
     - `HARBOR_USER`
     - `HARBOR_PW`
     - `STATION_ID`
+3. In the docker-compose file edit the following environment variables to set the User and password for the airflow web interface
+    - `AIRFLOW_USER`
+    - `AIRFLOW_PW`
 
 ## First Steps with Running Airflow
 1. Run `docker-compose up -d`. 
 2. Check that the logs do not contain any startup errors with  `docker-compose logs -f`.
 3. Go to `http://localhost:8080` and check whether you can see the web frontend of Apache Airflow.
-4. Run the DAG `test_docker` to see whether DAGs generally have access to the Docker daemon.
+4. Login with the previously set user credentials for the airflow web interface
 
 
 <!-- 

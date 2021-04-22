@@ -65,7 +65,6 @@ def create_user(session):
         user.username = os.getenv("AIRFLOW_USER", "admin")
         user.email = 'user@example.com'
         user.password = os.getenv("AIRFLOW_PW", "admin")
-        print("Created default user: " + user.username + " pw: " + user.password)
         session.add(user)
         session.commit()
 
