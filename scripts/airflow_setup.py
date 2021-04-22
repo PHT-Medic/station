@@ -50,21 +50,24 @@ def create_connections(session):
         host='localhost',  # TODO change this back to db
         port=5432,
         login='station',
-        schema='station',    # Maps to Database in Postgres
+        schema='station',  # Maps to Database in Postgres
         password='station')
     session.add_all([
         container_registry,
         postgres_station
     ])
 
+
 def create_user(session):
-    user = PasswordUser(models.User())
-    user.username = os.getenv("AIRFLOW_USER", "admin")
-    user.email = 'user@example.com'
-    user.password = os.getenv("AIRFLOW_PW", "admin")
-    print("Created default user: " + user.username + " pw: " + user.password)
-    session.add(user)
-    session.commit()
+
+    if not session.query(models.User).filter(models.User.username == os.getenv("AIRFLOW_USER", "admin")).first():
+        user = PasswordUser(models.User())
+        user.username = os.getenv("AIRFLOW_USER", "admin")
+        user.email = 'user@example.com'
+        user.password = os.getenv("AIRFLOW_PW", "admin")
+        print("Created default user: " + user.username + " pw: " + user.password)
+        session.add(user)
+        session.commit()
 
 
 @airflow.utils.db.provide_session
