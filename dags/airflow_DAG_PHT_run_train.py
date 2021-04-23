@@ -32,8 +32,11 @@ def pull_docker_image(**context):
     repository, tag = [context['dag_run'].conf[_] for _ in ['repository', 'tag']]
     # Pull the image.
     client = docker.from_env()
+
+    registry_address = "/".join(os.getenv("HARBOR_API_URL").split("/")[:-2])
+
     client.login(username=os.getenv("HARBOR_USER"), password=os.getenv("HARBOR_PW"),
-                 registry='harbor.pht.medic.uni-tuebingen.de')
+                 registry=registry_address)
     client.images.pull(repository=repository, tag=tag)
     # Pull base image as well
     client.images.pull(repository=repository, tag='base')
@@ -187,8 +190,9 @@ def push_docker_image(**context):
     # Run container again
     client = docker.from_env()
     # Login needed?
+    registry_address = "/".join(os.getenv("HARBOR_API_URL").split("/")[:-2])
     client.login(username=os.getenv("HARBOR_USER"), password=os.getenv("HARBOR_PW"),
-                 registry='harbor.pht.medic.uni-tuebingen.de')
+                 registry=registry_address)
     # TODO error handling
     response = client.images.push(repository=repository, tag=tag, stream=False, decode=False)
     print(response)
