@@ -34,7 +34,6 @@ services:
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
             - ./www/templates:/usr/local/airflow/plugins/templates
-            - ./pht_station:/opt/pythonpath/pht_station
             - ./station_leipzig_private_key.pem:/opt/private_key.pem # specify local private key path
         environment:
             - LOAD_EX=n      # Do not load example DAGS
