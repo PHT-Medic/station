@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 unset PHT_STATION_AIRFLOW_STATIC
 
