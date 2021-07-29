@@ -46,7 +46,7 @@ def pull_docker_image(**context):
     assert (':'.join([repository, tag]) in image_tags)
     print("Image was successfully pulled.")
     assert (':'.join([repository, 'base']) in image_tags)
-    print("Baseimage was successfully pulled.")
+    print("Base image was successfully pulled.")
 
 
 def pre_run_protocol(**context):
@@ -139,21 +139,6 @@ def rebase(**context):
         to_cont.put_archive(os.path.dirname(to_path), tar_stream)
 
     from_container = client.containers.create(f"{repository}:latest")
-    # Extract added and updated files
-    # try:
-    #     from_container = client.containers.create(f"{repository}:latest")
-    #     files = from_container.diff()
-    # except Exception as err:
-    #     print(err)
-    #     sys.exit()
-
-    # print('Copying new files into baseimage')
-    # for file in files:
-    #     print(file)
-    #     _copy(from_cont=from_container,
-    #           from_path=file['Path'],
-    #           to_cont=to_container,
-    #           to_path=file['Path'])
 
     # Copy results to base image
     _copy(from_cont=from_container,
@@ -162,7 +147,6 @@ def rebase(**context):
           to_path="/opt/pht_results")
 
     # Hardcoded copying of train_config.json
-    # TODO improve this
     _copy(from_cont=from_container,
           from_path="/opt/train_config.json",
           to_cont=to_container,
@@ -193,60 +177,8 @@ def push_docker_image(**context):
     registry_address = "/".join(os.getenv("HARBOR_API_URL").split("/")[:-2])
     client.login(username=os.getenv("HARBOR_USER"), password=os.getenv("HARBOR_PW"),
                  registry=registry_address)
-    # TODO error handling
     response = client.images.push(repository=repository, tag=tag, stream=False, decode=False)
     print(response)
-
-
-def put_harbor_label(**context):
-    # https://redmine.medic.uni-tuebingen.de/issues/1733
-    # Assumption that project name and project_repository can be extracted from the repository path from the last two
-    # labels
-
-    # TODO change to use environment variables
-    repository, tag = [context['dag_run'].conf[_] for _ in ['repository', 'tag']]
-    project, project_repo = repository.split('/')[-2:]
-    # config = configparser.ConfigParser()
-    # conf_file = context['dag_run'].conf['conf']
-    # print(f"Reading config file '{conf_file}':\n[credentials]\n"
-    #       "USERNAME = <USERNAME>\nPASSWORD = <PASSWORD>\n"
-    #       "API_URL = <HARBOR_API_URL>")
-    # config.read(conf_file)
-    # conf = ['API_URL', 'USERNAME', 'PASSWORD']
-    # try:
-    #     api, username, password = [config["credentials"][_] for _ in conf]
-    # except Exception as err:
-    #     print("Credentials could not be parsed.")
-    #     sys.exit()
-    api = os.getenv("HARBOR_API_URL")
-    username = os.getenv("HARBOR_USER")
-    password = os.getenv("HARBOR_PW")
-    url = f'{api}/projects/{project}/repositories/{project_repo}/artifacts/{tag}/labels'
-    print(f'Url for changing the label: {url}')
-
-    # Label being added currently hardcoded
-    # label_added = {'id': 7}  # pht_next id Wissenschaftsnetz
-    label_added = {'id': 2}  # pht_next id de.NBI cloud
-    print(f'Label to be added: {label_added}')
-    headers_add = {'accept': 'application/json', 'Content-Type': 'application/json'}
-    try:
-        response = requests.post(url, headers=headers_add, data=json.dumps(label_added),
-                                 auth=(username, password))
-        response.raise_for_status()
-        print(f'Label with id "{label_added}" has been added.')
-        return
-    except requests.exceptions.HTTPError as e:
-        e_msg = e.response.json()
-        print(e_msg)
-        if e_msg['errors'][0]['code'] == 'CONFLICT' and 'is already added to the artifact' in e_msg['errors'][0][
-            'message']:
-            print('Label has already been placed on the artifact')
-            return
-        else:
-            sys.exit()
-    except Exception as err:
-        print(err)
-        sys.exit()
 
 
 t1 = PythonOperator(
@@ -280,13 +212,13 @@ t4 = PythonOperator(
     dag=dag
 )
 
-# t5 = PythonOperator(
-#     task_id='rebase',
-#     provide_context=True,
-#     python_callable=rebase,
-#     execution_timeout=datetime.timedelta(minutes=5),
-#     dag=dag,
-# )
+t5 = PythonOperator(
+    task_id='rebase',
+    provide_context=True,
+    python_callable=rebase,
+    execution_timeout=datetime.timedelta(minutes=5),
+    dag=dag,
+)
 
 t6 = PythonOperator(
     task_id='push_docker_image',
@@ -296,12 +228,5 @@ t6 = PythonOperator(
     dag=dag,
 )
 
-t7 = PythonOperator(
-    task_id='put_harbor_label',
-    provide_context=True,
-    python_callable=put_harbor_label,
-    execution_timeout=datetime.timedelta(minutes=1),
-    dag=dag,
-)
 
-t1 >> t2 >> t3 >> t4 >> t6 >> t7
+t1 >> t2 >> t3 >> t4 >> t5 >> t6

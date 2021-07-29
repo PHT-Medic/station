@@ -1,0 +1,41 @@
+version: '3.8'
+
+
+volumes:
+  pg_pht_station:
+    external: True
+
+services:
+  airflow:
+      build: './airflow'
+      volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        # Station Private Key needs to be set and registered
+        # - ./station/station_leipzig_private_key.pem:/opt/private_key.pem
+        # Mount the dags directory as a volume
+        - ./airflow/dags:/root/airflow/dags
+        # - ./station /opt/station
+      depends_on:
+        - postgres
+      environment:
+        - FHIR_ADDRESS=https://fhir.personalhealhtrain.de
+        - FHIR_USER=fhiruser
+        - FHIR_PW=
+        - HARBOR_USER=graf
+        - HARBOR_PW=
+        - STATION_ID=1
+        - STATION_PRIVATE_KEY_PATH=/opt/private_key.pem
+        - HARBOR_API_URL=https://harbor.personalhealthtrain.de/api/v2.0
+      ports:
+        - 8080:8080
+
+  pg_station:
+    image: postgres:13
+    volumes:
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - pg_pht_station:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+    ports:
+      - 5432:5432
