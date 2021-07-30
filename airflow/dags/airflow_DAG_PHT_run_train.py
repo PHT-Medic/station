@@ -124,8 +124,6 @@ def rebase(**context):
     to_container = client.containers.create(base_image)
     updated_tag = tag
 
-    # TODO only copy the results directory + train_config.json
-
     def _copy(from_cont, from_path, to_cont, to_path):
         """
         Copies a file from one container to another container
