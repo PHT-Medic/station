@@ -4,6 +4,3 @@ docker
 psycopg2-binary
 python-dotenv
 minio
-# TODO check versions
-torch
-torchvision

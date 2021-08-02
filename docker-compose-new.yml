@@ -13,19 +13,21 @@ services:
         # Station Private Key needs to be set and registered
         # - ./station/station_leipzig_private_key.pem:/opt/private_key.pem
         # Mount the dags directory as a volume
-        - ./airflow/dags:/root/airflow/dags
+        # - ./airflow/dags:/root/airflow/dags
         # - ./station /opt/station
       depends_on:
-        - postgres
+        - pg_station
       environment:
-        - FHIR_ADDRESS=https://fhir.personalhealhtrain.de
-        - FHIR_USER=fhiruser
-        - FHIR_PW=
-        - HARBOR_USER=graf
-        - HARBOR_PW=
-        - STATION_ID=1
+        - FHIR_ADDRESS=$FHIR_SERVER_URL
+        - FHIR_USER=$FHIR_USER
+        - FHIR_PW=$FHIR_PW
+        - HARBOR_USER=$HARBOR_USER
+        - HARBOR_PW=$HARBOR_PW
+        - STATION_ID=$STATION_ID
         - STATION_PRIVATE_KEY_PATH=/opt/private_key.pem
-        - HARBOR_API_URL=https://harbor.personalhealthtrain.de/api/v2.0
+        - HARBOR_API_URL=$HARBOR_API_URL
+        - AIRFLOW_USER=$AIRFLOW_USER
+        - AIRFLOW_PW=$AIRFLOW_PW
       ports:
         - 8080:8080
 
