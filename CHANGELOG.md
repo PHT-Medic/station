@@ -13,3 +13,16 @@ Here we write upgrading notes.
 ### Changed
  
 ### Fixed
+
+## [0.9.0] - 2021-08-02
+ 
+Prerelease running version. With basic functionality for DAG and security.
+
+### Added
+Environment variables for airflow basic auth
+### Changed
+- Upgraded to Airflow 2.1.
+- Configuration based on .env file 
+### Fixed
+Removed harbor label functionality as it is no longer used. 
+

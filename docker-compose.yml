@@ -1,63 +1,43 @@
-version: '3.7'
+version: '3.8'
+
 
 volumes:
-    pgdata:
-        external: true
+  pg_pht_station:
+    external: True
 
 services:
+  airflow:
+      build: './airflow'
+      volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        # Station Private Key needs to be set and registered
+        - $STATION_PRIVATE_KEY_PATH:/opt/private_key.pem
+        # Mount the dags directory as a volume
+        # - ./airflow/dags:/root/airflow/dags
+        # - ./station /opt/station
+      depends_on:
+        - pg_station
+      environment:
+        - FHIR_ADDRESS=$FHIR_SERVER_URL
+        - FHIR_USER=$FHIR_USER
+        - FHIR_PW=$FHIR_PW
+        - HARBOR_USER=$HARBOR_USER
+        - HARBOR_PW=$HARBOR_PW
+        - STATION_ID=$STATION_ID
+        - PRIVATE_KEY_PATH=/opt/private_key.pem
+        - HARBOR_API_URL=$HARBOR_API_URL
+        - AIRFLOW_USER=$AIRFLOW_USER
+        - AIRFLOW_PW=$AIRFLOW_PW
+      ports:
+        - 8080:8080
 
-    db:
-        image: postgres:12.2-alpine
-        restart: always
-        volumes:
-            - pgdata:/var/lib/postgresql/data
-        ports:
-            - 5432:5432
-
-    adminer:
-        image: adminer:latest
-        restart: always
-        depends_on: 
-            - db
-        ports:
-            - 8081:8080
-
-    redis:
-        image: redis:5.0.8-alpine3.11
-        restart: always
-        ports:
-            - 6379:6379
-
-    airflow:
-        build: .
-        restart: always
-        volumes:
-            - /var/run/docker.sock:/var/run/docker.sock
-            - ./S_3_sk.pem:/opt/private_key.pem # specify local private key path
-        environment:
-            - LOAD_EX=n      # Do not load example DAGS
-            - EXECUTOR=Local
-            - POSTGRES_HOST=db
-            - PYTHONPATH=/opt/pythonpath
-            - FHIR_ADDRESS=https://fhir.personalhealhtrain.de
-            - FHIR_USER=fhiruser
-            - FHIR_PW=PhT-Fhir
-            - HARBOR_USER=
-            - HARBOR_PW=
-            - STATION_ID=3
-            - STATION_PRIVATE_KEY_PATH=/opt/private_key.pem
-            - HARBOR_API_URL=https://harbor-pht.tada5hi.net/api/v2.0
-            - AIRFLOW_USER=admin
-            - AIRFLOW_PW=admin
-        depends_on:
-          - db
-          - redis
-        ports:
-            - 8080:8080
-            - 5555:5555
-            - 8793:8793
-        healthcheck:
-            test: ["CMD-SHELL", "[ -f /usr/local/airflow/airflow-webserver.pid ]"]
-            interval: 30s
-            timeout: 30s
-            retries: 3
+  pg_station:
+    image: postgres:13
+    volumes:
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - pg_pht_station:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+    ports:
+      - 5432:5432

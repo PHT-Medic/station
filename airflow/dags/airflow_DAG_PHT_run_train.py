@@ -33,7 +33,7 @@ def pull_docker_image(**context):
     # Pull the image.
     client = docker.from_env()
 
-    registry_address = "/".join(os.getenv("HARBOR_API_URL").split("/")[:-2])
+    registry_address = os.getenv("HARBOR_URL")
 
     client.login(username=os.getenv("HARBOR_USER"), password=os.getenv("HARBOR_PW"),
                  registry=registry_address)
@@ -55,8 +55,8 @@ def pre_run_protocol(**context):
     config = extract_train_config(img)
     print(os.getenv("STATION_ID"))
     sp = SecurityProtocol(os.getenv("STATION_ID"), config=config)
-    print(os.getenv("STATION_PRIVATE_KEY_PATH"))
-    sp.pre_run_protocol(img=img, private_key_path=os.getenv("STATION_PRIVATE_KEY_PATH"))
+    print(os.getenv("PRIVATE_KEY_PATH"))
+    sp.pre_run_protocol(img=img, private_key_path=os.getenv("PRIVATE_KEY_PATH"))
 
 
 def execute_container(**context):
@@ -111,7 +111,7 @@ def post_run_protocol(**context):
     img = repository + ":" + tag
     config = extract_train_config(img)
     sp = SecurityProtocol(os.getenv("STATION_ID"), config=config)
-    sp.post_run_protocol(img=img, private_key_path=os.getenv("STATION_PRIVATE_KEY_PATH"))
+    sp.post_run_protocol(img=img, private_key_path=os.getenv("PRIVATE_KEY_PATH"))
 
 
 def rebase(**context):
@@ -172,7 +172,7 @@ def push_docker_image(**context):
     # Run container again
     client = docker.from_env()
     # Login needed?
-    registry_address = "/".join(os.getenv("HARBOR_API_URL").split("/")[:-2])
+    registry_address = os.getenv("HARBOR_URL")
     client.login(username=os.getenv("HARBOR_USER"), password=os.getenv("HARBOR_PW"),
                  registry=registry_address)
     response = client.images.push(repository=repository, tag=tag, stream=False, decode=False)
