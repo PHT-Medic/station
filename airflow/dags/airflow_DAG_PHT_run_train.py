@@ -8,8 +8,10 @@ import json
 import os
 
 from docker.errors import APIError
-from train_lib.docker_util.docker_ops import extract_train_config
+from train_lib.docker_util.docker_ops import extract_train_config, extract_query_json
 from train_lib.security.SecurityProtocol import SecurityProtocol
+from train_lib.fhir import PHTFhirClient
+
 
 from airflow.operators.python_operator import PythonOperator
 
@@ -57,6 +59,16 @@ def pre_run_protocol(**context):
     sp = SecurityProtocol(os.getenv("STATION_ID"), config=config)
     print(os.getenv("PRIVATE_KEY_PATH"))
     sp.pre_run_protocol(img=img, private_key_path=os.getenv("PRIVATE_KEY_PATH"))
+
+
+def execute_query(**context):
+    repository, tag = [context['dag_run'].conf[_] for _ in ['repository', 'tag']]
+    img = repository + ":" + tag
+    query_dict = extract_query_json(img)
+    print(query_dict)
+
+    fhir_client = PHTFhirClient()
+
 
 
 def execute_container(**context):
