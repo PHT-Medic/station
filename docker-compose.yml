@@ -25,7 +25,7 @@ services:
         - HARBOR_PW=$HARBOR_PW
         - STATION_ID=$STATION_ID
         - PRIVATE_KEY_PATH=/opt/private_key.pem
-        - HARBOR_API_URL=$HARBOR_API_URL
+        - HARBOR_API_URL=$HARBOR_URL
         - AIRFLOW_USER=$AIRFLOW_USER
         - AIRFLOW_PW=$AIRFLOW_PW
       ports:

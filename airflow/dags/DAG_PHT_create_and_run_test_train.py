@@ -38,7 +38,7 @@ default_args = {
 
 
 @dag(default_args=default_args, schedule_interval=None, start_date=days_ago(2), tags=['pht', "test"])
-def build_and_run_test_train():
+def build_and_run_test_train(**kwargs):
     # security_protocol = SecurityProtocol()
 
     @task()
@@ -51,8 +51,8 @@ def build_and_run_test_train():
     def process_dag_config(current_context: dict):
         print(current_context)
 
-    context_info = get_current_context()
-    process_dag_config(context_info)
+    dag_run_config = get_config_from_context()
+    process_dag_config(dag_run_config)
 
 
 test_train_dag = build_and_run_test_train()

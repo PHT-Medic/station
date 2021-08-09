@@ -35,7 +35,7 @@ def pull_docker_image(**context):
     # Pull the image.
     client = docker.from_env()
 
-    registry_address = os.getenv("HARBOR_URL")
+    registry_address = os.getenv("HARBOR_API_URL").split("//")[-1]
 
     client.login(username=os.getenv("HARBOR_USER"), password=os.getenv("HARBOR_PW"),
                  registry=registry_address)
@@ -69,6 +69,12 @@ def execute_query(**context):
 
     fhir_client = PHTFhirClient()
 
+
+
+def execute_query(**context):
+    repository, tag = [context['dag_run'].conf[_] for _ in ['repository', 'tag']]
+    img = repository + ":" + tag
+    query_json = extract_query_json(img)
 
 
 def execute_container(**context):
@@ -184,7 +190,7 @@ def push_docker_image(**context):
     # Run container again
     client = docker.from_env()
     # Login needed?
-    registry_address = os.getenv("HARBOR_URL")
+    registry_address = os.getenv("HARBOR_API_URL").split("//")[-1]
     client.login(username=os.getenv("HARBOR_USER"), password=os.getenv("HARBOR_PW"),
                  registry=registry_address)
     response = client.images.push(repository=repository, tag=tag, stream=False, decode=False)
