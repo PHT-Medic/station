@@ -38,7 +38,7 @@ default_args = {
 
 
 @dag(default_args=default_args, schedule_interval=None, start_date=days_ago(2), tags=['pht', "test"])
-def build_and_run_test_train(**kwargs):
+def build_and_run_test_train():
     # security_protocol = SecurityProtocol()
 
     @task()
