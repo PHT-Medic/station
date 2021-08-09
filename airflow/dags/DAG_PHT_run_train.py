@@ -12,7 +12,6 @@ from train_lib.docker_util.docker_ops import extract_train_config, extract_query
 from train_lib.security.SecurityProtocol import SecurityProtocol
 from train_lib.fhir import PHTFhirClient
 
-
 from airflow.operators.python_operator import PythonOperator
 
 default_args = {
@@ -27,7 +26,7 @@ default_args = {
     'retry_delay': datetime.timedelta(minutes=5),
 }
 
-dag = airflow.DAG(dag_id='run_train', default_args=default_args, schedule_interval=None)
+dag = airflow.DAG(dag_id='run_train', default_args=default_args, schedule_interval=None, tags=["pht"])
 
 
 def pull_docker_image(**context):
@@ -68,7 +67,6 @@ def execute_query(**context):
     print(query_dict)
 
     fhir_client = PHTFhirClient()
-
 
 
 def execute_query(**context):
@@ -243,6 +241,5 @@ t6 = PythonOperator(
     execution_timeout=datetime.timedelta(minutes=1),
     dag=dag,
 )
-
 
 t1 >> t2 >> t3 >> t4 >> t5 >> t6
