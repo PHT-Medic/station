@@ -93,6 +93,13 @@ def test_station_infrastructure():
     @task()
     def test_fhir_config(fhir_config):
         print(fhir_config)
+        fhir_client = PHTFhirClient(server_url=fhir_config["FHIR_ADDRESS"],
+                                    password=fhir_config["FHIR_PW"],
+                                    username=fhir_config["FHIR_USER"],
+                                    token=fhir_config["FHIR_TOKEN"],
+                                    server_type=fhir_config["FHIR_SERVER_TYPE"]
+                                    )
+        fhir_client.health_check()
 
     test_docker()
     fhir_config = get_fhir_server_config()

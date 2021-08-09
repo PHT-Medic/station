@@ -24,6 +24,7 @@ Open the `.env` file at the root of the repository and edit the following enviro
 - `FHIR_USER` username to authenticate against the FHIR server using Basic Auth
 - `FHIR_PW` password for Basic Auth
 - `FHIR_TOKEN` Token to authenticate against the FHIR server using Bearer Token
+- `FHIR_SERVER_TYPE` the type of fhir server (PHT FHIR client supports IBM, Hapi and Blaze FHIR servers)
 - `HARBOR_API_URL` the url of the central harbor instance
 - `HARBOR_USER` username to authenticate against harbor
 - `HARBOR_PW` password to authenticate against harbor
