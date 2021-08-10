@@ -10,6 +10,7 @@ from airflow.utils.dates import days_ago
 from train_lib.train.build_test_train import build_test_train
 from train_lib.fhir import PHTFhirClient
 from train_lib.security import SecurityProtocol
+from cryptography.hazmat.primitives.serialization import load_pem_private_key
 
 # Operators; we need this to operate!
 from airflow.operators.bash import BashOperator
@@ -42,7 +43,7 @@ default_args = {
 
 
 @dag(default_args=default_args, schedule_interval=None, start_date=days_ago(2), tags=['pht', "test"])
-def test_station_infrastructure():
+def test_station_configuration():
     @task()
     def test_docker():
         client = docker.from_env()
@@ -51,10 +52,15 @@ def test_station_infrastructure():
         client.login(username=os.getenv("HARBOR_USER"), password=os.getenv("HARBOR_PW"),
                      registry=registry_address)
 
+
     @task()
-    def get_fhir_server_config():
+    def get_dag_config():
         context = get_current_context()
         config = context['dag_run'].conf
+        return config
+
+    @task()
+    def get_fhir_server_config(config):
 
         env_dict = config.get("env", None)
         if env_dict:
@@ -83,7 +89,7 @@ def test_station_infrastructure():
         if not fhir_user and (fhir_pw or fhir_token):
             raise ValueError("Incomplete FHIR credentials, token or password set but no user given.")
 
-        return  {
+        return {
             "FHIR_ADDRESS": fhir_url,
             "FHIR_USER": fhir_user,
             "FHIR_TOKEN": fhir_token,
@@ -103,9 +109,7 @@ def test_station_infrastructure():
         fhir_client.health_check()
 
     @task()
-    def test_fhir_query():
-        context = get_current_context()
-        config = context['dag_run'].conf
+    def test_fhir_query(config):
 
         query_dict = config.get("query", None)
 
@@ -126,13 +130,27 @@ def test_station_infrastructure():
         else:
             print("No FHIR Query provided.")
 
+    @task()
+    def test_load_private_key():
+        private_key_path = os.getenv("PRIVATE_KEY_PATH")
+
+        if not private_key_path:
+            raise ValueError("No path to private key found.")
+
+        with open(private_key_path, "rb") as private_key_file:
+            private_key = load_pem_private_key(private_key_file.read(), password=None)
+
+        print("Private key loaded successfully.")
+
 
 
     test_docker()
-    fhir_config = get_fhir_server_config()
+    dag_config = get_dag_config()
+    fhir_config = get_fhir_server_config(dag_config)
     test_fhir_config(fhir_config)
-    test_fhir_query()
+    if dag_config["query"]:
+        test_fhir_query(dag_config)
+    test_load_private_key()
 
 
-
-infrastructure_dag = test_station_infrastructure()
+configuration_dag = test_station_configuration()
