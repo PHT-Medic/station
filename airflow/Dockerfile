@@ -12,6 +12,11 @@ RUN apt-get update -yqq \
         apt-utils \
         netcat \
         locales
+# Install container diff library
+RUN curl -LO https://storage.googleapis.com/container-diff/latest/container-diff-linux-amd64 && \
+    install container-diff-linux-amd64 /usr/local/bin/container-diff
+
+
 
 COPY requirements.txt /tmp/requirements.txt
 

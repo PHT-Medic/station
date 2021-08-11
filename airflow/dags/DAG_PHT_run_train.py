@@ -11,6 +11,7 @@ from docker.errors import APIError
 from train_lib.docker_util.docker_ops import extract_train_config, extract_query_json
 from train_lib.security.SecurityProtocol import SecurityProtocol
 from train_lib.fhir import PHTFhirClient
+from train_lib.docker_util.validate_master_image import validate_train_image
 
 from airflow.operators.python_operator import PythonOperator
 
@@ -50,6 +51,15 @@ def pull_docker_image(**context):
     print("Base image was successfully pulled.")
 
 
+def validate_train_image_against_master_image(**context):
+    repository, tag = [context['dag_run'].conf[_] for _ in ['repository', 'tag']]
+    img = repository + ":" + tag
+    config = extract_train_config(img)
+    master_image = config["master_image"]
+
+    validate_train_image(train_img=img, master_image=master_image)
+
+
 def pre_run_protocol(**context):
     repository, tag = [context['dag_run'].conf[_] for _ in ['repository', 'tag']]
     img = repository + ":" + tag
@@ -67,12 +77,6 @@ def execute_query(**context):
     print(query_dict)
 
     fhir_client = PHTFhirClient()
-
-
-def execute_query(**context):
-    repository, tag = [context['dag_run'].conf[_] for _ in ['repository', 'tag']]
-    img = repository + ":" + tag
-    query_json = extract_query_json(img)
 
 
 def execute_container(**context):
@@ -203,6 +207,13 @@ t1 = PythonOperator(
 )
 
 t2 = PythonOperator(
+    task_id="validate_train_image_against_master_image",
+    provide_context=True,
+    python_callable=validate_train_image_against_master_image,
+    dag=dag
+)
+
+t3 = PythonOperator(
     task_id="pre-run_protocol",
     provide_context=True,
     python_callable=pre_run_protocol,
@@ -210,7 +221,7 @@ t2 = PythonOperator(
     dag=dag
 )
 
-t3 = PythonOperator(
+t4 = PythonOperator(
     task_id='execute_container',
     provide_context=True,
     python_callable=execute_container,
@@ -218,7 +229,7 @@ t3 = PythonOperator(
     dag=dag,
 )
 
-t4 = PythonOperator(
+t5 = PythonOperator(
     task_id="post-run_protocol",
     provide_context=True,
     python_callable=post_run_protocol,
@@ -226,7 +237,7 @@ t4 = PythonOperator(
     dag=dag
 )
 
-t5 = PythonOperator(
+t6 = PythonOperator(
     task_id='rebase',
     provide_context=True,
     python_callable=rebase,
@@ -234,7 +245,7 @@ t5 = PythonOperator(
     dag=dag,
 )
 
-t6 = PythonOperator(
+t7 = PythonOperator(
     task_id='push_docker_image',
     provide_context=True,
     python_callable=push_docker_image,
@@ -242,4 +253,4 @@ t6 = PythonOperator(
     dag=dag,
 )
 
-t1 >> t2 >> t3 >> t4 >> t5 >> t6
+t1 >> t2 >> t3 >> t4 >> t5 >> t6 >> t7
