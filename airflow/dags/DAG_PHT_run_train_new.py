@@ -136,7 +136,7 @@ def run_pht_train():
             username=fhir_user,
             password=fhir_pw,
             token=fhir_token,
-            server_type=fhir_server_type
+            fhir_server_type=fhir_server_type
         )
         with asyncio.get_event_loop() as loop:
             result = loop.run_until_complete(fhir_client.execute_query(query=train_state["query"]))

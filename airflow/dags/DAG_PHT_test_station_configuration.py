@@ -109,10 +109,10 @@ def test_station_configuration():
         fhir_client.health_check()
 
     @task()
-    def test_fhir_query(config):
+    def test_fhir_query(config, fhir_config):
 
         query_dict = config.get("query", None)
-
+        print(query_dict)
         if query_dict:
 
             fhir_client = PHTFhirClient(server_url=fhir_config["FHIR_ADDRESS"],
@@ -149,7 +149,7 @@ def test_station_configuration():
     fhir_config = get_fhir_server_config(dag_config)
     test_fhir_config(fhir_config)
     if dag_config["query"]:
-        test_fhir_query(dag_config)
+        test_fhir_query(dag_config, fhir_config)
     test_load_private_key()
 
 
