@@ -104,7 +104,7 @@ def test_station_configuration():
                                     password=fhir_config["FHIR_PW"],
                                     username=fhir_config["FHIR_USER"],
                                     token=fhir_config["FHIR_TOKEN"],
-                                    server_type=fhir_config["FHIR_SERVER_TYPE"]
+                                    fhir_server_type=fhir_config["FHIR_SERVER_TYPE"]
                                     )
         fhir_client.health_check()
 
@@ -119,7 +119,7 @@ def test_station_configuration():
                                         password=fhir_config["FHIR_PW"],
                                         username=fhir_config["FHIR_USER"],
                                         token=fhir_config["FHIR_TOKEN"],
-                                        server_type=fhir_config["FHIR_SERVER_TYPE"],
+                                        fhir_server_type=fhir_config["FHIR_SERVER_TYPE"],
                                         )
 
             fhir_client.output_format = "raw"
