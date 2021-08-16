@@ -3,19 +3,14 @@ import sys
 from datetime import timedelta
 import json
 import os
+import os.path
 
 import docker
 from airflow.decorators import dag, task
 from airflow.operators.python import get_current_context
-from airflow.utils.dates import days_ago
-from docker.errors import APIError
-from train_lib.train.build_test_train import build_test_train
-from train_lib.fhir import PHTFhirClient
-from train_lib.security import SecurityProtocol
-from cryptography.hazmat.primitives.serialization import load_pem_private_key
 
-# Operators; we need this to operate!
-from airflow.operators.bash import BashOperator
+from docker.errors import APIError
+
 from airflow.utils.dates import days_ago
 
 from train_lib.docker_util.docker_ops import extract_train_config, extract_query_json
@@ -58,7 +53,9 @@ def run_pht_train():
                                          ['repository', 'tag', 'env', 'volumes']]
         img = repository + ":" + tag
 
+        train_id = repository.split("/")[-1]
         train_state_dict = {
+            "train_id": train_id,
             "repository": repository,
             "tag": tag,
             "img": img,
@@ -136,16 +133,26 @@ def run_pht_train():
             username=fhir_user,
             password=fhir_pw,
             token=fhir_token,
-            server_type=fhir_server_type
+            fhir_server_type=fhir_server_type
         )
-        with asyncio.get_event_loop() as loop:
-            result = loop.run_until_complete(fhir_client.execute_query(query=train_state["query"]))
-            print(result)
+        loop = asyncio.get_event_loop()
+        query_result = loop.run_until_complete(fhir_client.execute_query(query=train_state["query"]))
+        print(query_result)
 
-        output_format = train_state["query"]["data"]["output_format"]
         output_file_name = train_state["query"]["data"]["filename"]
         # TODO get full path
-        train_state["volumes"] = {output_file_name: f"opt/pht_train/data/{output_file_name}"}
+
+        # Create the file path in which to store the FHIR query results
+        data_dir = os.getenv("AIRFLOW_DATA_DIR", "/opt/data")
+        train_data_dir = os.path.join(data_dir, train_state["train_id"])
+
+        train_data_dir = os.path.abspath(train_data_dir)
+
+        train_data_path = fhir_client.store_query_results(query_result, storage_dir=train_data_dir,
+                                                          filename=output_file_name)
+
+        # Add the file containing the fhir query results to the volumes configuration
+        train_state["volumes"] = {**{train_data_path: f"/opt/train_data/{output_file_name}"}, **train_state["volumes"]}
 
         return train_state
 

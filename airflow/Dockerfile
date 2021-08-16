@@ -1,4 +1,5 @@
 FROM python:3.8
+MAINTAINER michael.graf@uni-tuebingen.de
 
 EXPOSE 8080 5555 8793
 
@@ -16,8 +17,7 @@ RUN apt-get update -yqq \
 RUN curl -LO https://storage.googleapis.com/container-diff/latest/container-diff-linux-amd64 && \
     install container-diff-linux-amd64 /usr/local/bin/container-diff
 
-
-
+RUN mkdir /opt/train_data
 COPY requirements.txt /tmp/requirements.txt
 
 
