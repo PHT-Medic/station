@@ -133,34 +133,61 @@ def run_pht_train():
             username=fhir_user,
             password=fhir_pw,
             token=fhir_token,
-            fhir_server_type=fhir_server_type
+            fhir_server_type=fhir_server_type,
+            disable_k_anon=True
         )
         loop = asyncio.get_event_loop()
         query_result = loop.run_until_complete(fhir_client.execute_query(query=train_state["query"]))
         print(query_result)
 
         output_file_name = train_state["query"]["data"]["filename"]
-        # TODO get full path
 
         # Create the file path in which to store the FHIR query results
-        data_dir = os.getenv("AIRFLOW_DATA_DIR", "/opt/data")
+        data_dir = os.getenv("AIRFLOW_DATA_DIR", "/opt/train_data")
         train_data_dir = os.path.join(data_dir, train_state["train_id"])
 
+        if not os.path.isdir(train_data_dir):
+            os.mkdir(train_data_dir)
+
         train_data_dir = os.path.abspath(train_data_dir)
+        print("train data dir: ", train_data_dir)
 
         train_data_path = fhir_client.store_query_results(query_result, storage_dir=train_data_dir,
                                                           filename=output_file_name)
+        print("train data path: ", train_data_path)
 
         # Add the file containing the fhir query results to the volumes configuration
-        train_state["volumes"] = {**{train_data_path: f"/opt/train_data/{output_file_name}"}, **train_state["volumes"]}
+        # todo combine the train specific path with the env var absolute path for station data as a volume
+        query_data_volume = {
+            train_data_path: {
+                "bind": f"/opt/train_data/{output_file_name}",
+                "mode": "ro"
+            }
+        }
 
+        data_dir_env = {
+            "TRAIN_DATA_DIR": f"/opt/train_data/{output_file_name}"
+        }
+
+        if isinstance(train_state["volumes"], dict):
+            train_state["volumes"] = {**query_data_volume,
+                                      **train_state.get("volumes")}
+        elif train_state["volumes"] is None:
+            train_state["volumes"] = query_data_volume
+
+        if train_state.get("env", None):
+            train_state["env"] = {**train_state["env"], **data_dir_env}
+        else:
+            train_state["env"] = data_dir_env
         return train_state
 
     @task()
     def execute_container(train_state):
         client = docker.from_env()
+        print(train_state)
         environment = train_state.get("env", {})
         volumes = train_state.get("volumes", {})
+        print(train_state["volumes"])
 
         container_name = f'{train_state["repository"].split("/")[-1]}.{train_state["tag"]}'
         try:
@@ -257,7 +284,7 @@ def run_pht_train():
     train_state = get_train_image_info()
     train_state = pull_docker_image(train_state)
     train_state = extract_config_and_query(train_state)
-    train_state = validate_against_master_image(train_state)
+    # train_state = validate_against_master_image(train_state)
     train_state = pre_run_protocol(train_state)
     train_state = execute_query(train_state)
     train_state = execute_container(train_state)

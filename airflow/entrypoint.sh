@@ -4,8 +4,6 @@ set -e
 
 if [ "$1" = 'webserver' ]; then
     airflow db init
-    echo $AIRFLOW_USER
-    echo $AIRFLOW_PW
     airflow users create --username $AIRFLOW_USER --firstname Station --lastname Admin --role Admin --email admin@station.org -p $AIRFLOW_PW
     airflow scheduler &
     exec  airflow webserver
