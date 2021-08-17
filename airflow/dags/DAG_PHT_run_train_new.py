@@ -155,15 +155,19 @@ def run_pht_train():
         train_data_path = fhir_client.store_query_results(query_result, storage_dir=train_data_dir,
                                                           filename=output_file_name)
         print("train data path: ", train_data_path)
+        host_data_path = os.path.join(os.getenv("STATION_DATA_DIR"), train_state["train_id"], output_file_name)
 
+        print(host_data_path)
         # Add the file containing the fhir query results to the volumes configuration
         # todo combine the train specific path with the env var absolute path for station data as a volume
         query_data_volume = {
-            train_data_path: {
+            host_data_path: {
                 "bind": f"/opt/train_data/{output_file_name}",
                 "mode": "ro"
             }
         }
+
+
 
         data_dir_env = {
             "TRAIN_DATA_DIR": f"/opt/train_data/{output_file_name}"
