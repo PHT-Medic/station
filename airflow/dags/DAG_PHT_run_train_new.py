@@ -10,6 +10,7 @@ from airflow.decorators import dag, task
 from airflow.operators.python import get_current_context
 
 from docker.errors import APIError
+from docker.types import Mount
 
 from airflow.utils.dates import days_ago
 
@@ -166,16 +167,16 @@ def run_pht_train():
                 "mode": "ro"
             }
         }
+        data_mount = Mount(source=host_data_path, target= f"/opt/train_data/{output_file_name}")
 
         data_dir_env = {
             "TRAIN_DATA_PATH": f"/opt/train_data/{output_file_name}"
         }
 
-        if isinstance(train_state.get("volumes"), dict):
-            train_state["volumes"] = {**query_data_volume,
-                                      **train_state.get("volumes")}
+        if isinstance(train_state.get("volumes"), list):
+            train_state["volumes"] = train_state["volumes"].append(data_mount)
         else:
-            train_state["volumes"] = query_data_volume
+            train_state["volumes"] = [data_mount]
 
         if train_state.get("env", None):
             train_state["env"] = {**train_state["env"], **data_dir_env}
@@ -192,20 +193,23 @@ def run_pht_train():
 
         print("Env dict: ", environment)
 
-        container_name = f'{train_state["repository"].split("/")[-1]}.{train_state["tag"]}'
+        # container_name = f'{train_state["repository"].split("/")[-1]}.{train_state["tag"]}'
         try:
-            container = client.containers.run(train_state["img"], environment=environment, volumes=volumes,
-                                              name=container_name, detach=True)
+            container = client.containers.run(train_state["img"], environment=environment, mounts=volumes,
+                                              detach=True)
         # If the container is already in use remove it
         except APIError as e:
-            print(e)
-            client.containers.remove(container_name)
-            container = client.containers.run(train_state["img"], environment=environment, volumes=volumes,
-                                              name=container_name, detach=True)
-
+            # print(e)
+            # client.containers.remove(container_name)
+            container = client.containers.run(train_state["img"], environment=environment, mounts=volumes,
+                                              detach=True)
+        print(container)
         exit_code = container.wait()["StatusCode"]
         container.commit(repository=train_state["repository"], tag=train_state["tag"])
+        inspect = client.api.inspect_container(container.id)
+        print(inspect)
         print(container.logs().decode("utf-8"))
+        container.remove(v=True)
         if exit_code != 0:
             raise ValueError(f"The train execution returned a non zero exit code: {exit_code}")
 
@@ -213,9 +217,11 @@ def run_pht_train():
 
     @task()
     def post_run_protocol(train_state):
+
         config = train_state["config"]
         sp = SecurityProtocol(os.getenv("STATION_ID"), config=config)
-        sp.post_run_protocol(img=train_state["img"], private_key_path=os.getenv("PRIVATE_KEY_PATH"))
+        sp.post_run_protocol(img=train_state["repository"] + ":" + train_state["tag"],
+                             private_key_path=os.getenv("PRIVATE_KEY_PATH"))
 
         return train_state
 
