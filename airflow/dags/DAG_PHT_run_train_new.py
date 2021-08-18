@@ -143,7 +143,7 @@ def run_pht_train():
         output_file_name = train_state["query"]["data"]["filename"]
 
         # Create the file path in which to store the FHIR query results
-        data_dir = os.getenv("AIRFLOW_DATA_DIR", "/opt/train_data")
+        data_dir = os.getenv("AIRFLOW_DATA_DIR", "/opt/station_data")
         train_data_dir = os.path.join(data_dir, train_state["train_id"])
 
         if not os.path.isdir(train_data_dir):
@@ -167,16 +167,14 @@ def run_pht_train():
             }
         }
 
-
-
         data_dir_env = {
-            "TRAIN_DATA_DIR": f"/opt/train_data/{output_file_name}"
+            "TRAIN_DATA_PATH": f"/opt/train_data/{output_file_name}"
         }
 
-        if isinstance(train_state["volumes"], dict):
+        if isinstance(train_state.get("volumes"), dict):
             train_state["volumes"] = {**query_data_volume,
                                       **train_state.get("volumes")}
-        elif train_state["volumes"] is None:
+        else:
             train_state["volumes"] = query_data_volume
 
         if train_state.get("env", None):
@@ -188,10 +186,11 @@ def run_pht_train():
     @task()
     def execute_container(train_state):
         client = docker.from_env()
-        print(train_state)
         environment = train_state.get("env", {})
         volumes = train_state.get("volumes", {})
-        print(train_state["volumes"])
+        print("Volumes", train_state["volumes"])
+
+        print("Env dict: ", environment)
 
         container_name = f'{train_state["repository"].split("/")[-1]}.{train_state["tag"]}'
         try:
