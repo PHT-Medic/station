@@ -19,8 +19,6 @@ from train_lib.security.SecurityProtocol import SecurityProtocol
 from train_lib.fhir import PHTFhirClient
 from train_lib.docker_util.validate_master_image import validate_train_image
 
-# These args will get passed on to each operator
-# You can override them on a per-task basis during operator initialization
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
@@ -139,7 +137,6 @@ def run_pht_train():
         )
         loop = asyncio.get_event_loop()
         query_result = loop.run_until_complete(fhir_client.execute_query(query=train_state["query"]))
-        print(query_result)
 
         output_file_name = train_state["query"]["data"]["filename"]
 
@@ -158,7 +155,6 @@ def run_pht_train():
         print("train data path: ", train_data_path)
         host_data_path = os.path.join(os.getenv("STATION_DATA_DIR"), train_state["train_id"], output_file_name)
 
-        print(host_data_path)
         # Add the file containing the fhir query results to the volumes configuration
         query_data_volume = {
             host_data_path: {
@@ -166,15 +162,13 @@ def run_pht_train():
                 "mode": "ro"
             }
         }
-        data_mount = Mount(source=host_data_path, target=f"/opt/train_data/{output_file_name}")
 
         data_dir_env = {
             "TRAIN_DATA_PATH": f"/opt/train_data/{output_file_name}"
         }
 
         if isinstance(train_state.get("volumes"), dict):
-            # todo append created volume to potentially existing ones
-            train_state["volumes"] = query_data_volume
+            train_state["volumes"] = {**query_data_volume, **train_state["volumes"]}
         else:
             train_state["volumes"] = query_data_volume
 
@@ -190,10 +184,8 @@ def run_pht_train():
         environment = train_state.get("env", {})
         volumes = train_state.get("volumes", {})
         print("Volumes", train_state["volumes"])
-
         print("Env dict: ", environment)
 
-        # container_name = f'{train_state["repository"].split("/")[-1]}.{train_state["tag"]}'
         try:
             container = client.containers.run(train_state["img"], environment=environment, volumes=volumes,
                                               detach=True)
@@ -203,13 +195,30 @@ def run_pht_train():
             # client.containers.remove(container_name)
             container = client.containers.run(train_state["img"], environment=environment, volumes=volumes,
                                               detach=True)
-        print(container)
         exit_code = container.wait()["StatusCode"]
-        container.commit(repository=train_state["repository"], tag=train_state["tag"])
-        inspect = client.api.inspect_container(container.id)
-        print(inspect)
-        print(container.logs().decode("utf-8"))
-        container.remove(v=True)
+
+        def _copy(from_cont, from_path, to_cont, to_path):
+            """
+            Copies a file from one container to another container
+            :param from_cont:
+            :param from_path:
+            :param to_cont:
+            :param to_path:
+            :return:
+            """
+            tar_stream, _ = from_cont.get_archive(from_path)
+            to_cont.put_archive(os.path.dirname(to_path), tar_stream)
+
+        base_image = ':'.join([train_state["repository"], 'base'])
+        to_container = client.containers.create(base_image)
+        # Copy results to base image
+        _copy(from_cont=container,
+              from_path="/opt/pht_results",
+              to_cont=to_container,
+              to_path="/opt/pht_results")
+
+        to_container.commit(repository=train_state["repository"], tag=train_state["tag"])
+        container.remove(v=True, force=True)
         if exit_code != 0:
             raise ValueError(f"The train execution returned a non zero exit code: {exit_code}")
 
@@ -220,7 +229,7 @@ def run_pht_train():
 
         config = train_state["config"]
         sp = SecurityProtocol(os.getenv("STATION_ID"), config=config)
-        sp.post_run_protocol(img=train_state["repository"] + ":" + train_state["tag"],
+        sp.post_run_protocol(img=train_state["img"],
                              private_key_path=os.getenv("PRIVATE_KEY_PATH"))
 
         return train_state
@@ -293,7 +302,7 @@ def run_pht_train():
     train_state = get_train_image_info()
     train_state = pull_docker_image(train_state)
     train_state = extract_config_and_query(train_state)
-    # train_state = validate_against_master_image(train_state)
+    train_state = validate_against_master_image(train_state)
     train_state = pre_run_protocol(train_state)
     train_state = execute_query(train_state)
     train_state = execute_container(train_state)
