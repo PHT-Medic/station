@@ -160,20 +160,20 @@ def run_pht_train():
 
         print(host_data_path)
         # Add the file containing the fhir query results to the volumes configuration
-        # todo combine the train specific path with the env var absolute path for station data as a volume
         query_data_volume = {
             host_data_path: {
                 "bind": f"/opt/train_data/{output_file_name}",
                 "mode": "ro"
             }
         }
-        data_mount = Mount(source=host_data_path, target= f"/opt/train_data/{output_file_name}")
+        data_mount = Mount(source=host_data_path, target=f"/opt/train_data/{output_file_name}")
 
         data_dir_env = {
             "TRAIN_DATA_PATH": f"/opt/train_data/{output_file_name}"
         }
 
         if isinstance(train_state.get("volumes"), dict):
+            # todo append created volume to potentially existing ones
             train_state["volumes"] = query_data_volume
         else:
             train_state["volumes"] = query_data_volume
@@ -195,13 +195,13 @@ def run_pht_train():
 
         # container_name = f'{train_state["repository"].split("/")[-1]}.{train_state["tag"]}'
         try:
-            container = client.containers.run(train_state["img"], environment=environment, mounts=volumes,
+            container = client.containers.run(train_state["img"], environment=environment, volumes=volumes,
                                               detach=True)
         # If the container is already in use remove it
         except APIError as e:
             # print(e)
             # client.containers.remove(container_name)
-            container = client.containers.run(train_state["img"], environment=environment, mounts=volumes,
+            container = client.containers.run(train_state["img"], environment=environment, volumes=volumes,
                                               detach=True)
         print(container)
         exit_code = container.wait()["StatusCode"]
