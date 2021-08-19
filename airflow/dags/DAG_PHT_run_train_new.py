@@ -173,10 +173,10 @@ def run_pht_train():
             "TRAIN_DATA_PATH": f"/opt/train_data/{output_file_name}"
         }
 
-        if isinstance(train_state.get("volumes"), list):
-            train_state["volumes"] = train_state["volumes"].append(data_mount)
+        if isinstance(train_state.get("volumes"), dict):
+            train_state["volumes"] = query_data_volume
         else:
-            train_state["volumes"] = [data_mount]
+            train_state["volumes"] = query_data_volume
 
         if train_state.get("env", None):
             train_state["env"] = {**train_state["env"], **data_dir_env}
