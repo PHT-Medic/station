@@ -10,11 +10,9 @@ services:
       build: './airflow'
       volumes:
         - /var/run/docker.sock:/var/run/docker.sock
-        # Station Private Key needs to be set and registered
+        # Station Private Key environment variable needs to be set and registered
         - $STATION_PRIVATE_KEY_PATH:/opt/private_key.pem
-        # Mount the dags directory as a volume
-        # - ./airflow/dags:/root/airflow/dags
-        # - ./station /opt/station
+        - $STATION_DATA_DIR:$AIRFLOW_DATA_DIR
       depends_on:
         - pg_station
       environment:
@@ -30,6 +28,7 @@ services:
         - HARBOR_API_URL=$HARBOR_URL
         - AIRFLOW_USER=$AIRFLOW_USER
         - AIRFLOW_PW=$AIRFLOW_PW
+        - STATION_DATA_DIR=$STATION_DATA_DIR
       ports:
         - 8080:8080
 
