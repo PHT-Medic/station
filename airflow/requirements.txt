@@ -8,4 +8,4 @@ requests
 loguru
 icecream
 fhir.resources
-git+https://gitlab.com/PersonalHealthTrain/implementations/germanmii/difuture/train-container-library.git
+https://gitlab.com/PersonalHealthTrain/implementations/germanmii/difuture/library/train-container-library.git

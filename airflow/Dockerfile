@@ -22,7 +22,7 @@ COPY requirements.txt /tmp/requirements.txt
 
 
 RUN pip install -r /tmp/requirements.txt
-RUN pip install git+https://gitlab.com/PersonalHealthTrain/implementations/germanmii/difuture/train-container-library.git
+RUN pip install git+https://gitlab.com/PersonalHealthTrain/implementations/germanmii/difuture/library/train-container-library.git
 
 COPY airflow.cfg /root/airflow/airflow.cfg
 COPY ./dags /root/airflow/dags
