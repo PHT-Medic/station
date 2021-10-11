@@ -89,9 +89,15 @@ def run_pht_train():
     @task()
     def extract_config_and_query(train_state):
         config = extract_train_config(train_state["img"])
-        query = extract_query_json(train_state["img"])
         train_state["config"] = config
-        train_state["query"] = query
+
+        # try to extract th query json if it exists under the specified path
+        try:
+            query = extract_query_json(train_state["img"])
+            train_state["query"] = query
+        except:
+            train_state["query"] = None
+            print("No query file found ")
 
         return train_state
 
@@ -113,69 +119,70 @@ def run_pht_train():
     @task()
     def execute_query(train_state):
 
-        env_dict = train_state.get("env", None)
-        if env_dict:
-            fhir_url = env_dict.get("FHIR_ADDRESS", None)
-            fhir_user = env_dict.get("FHIR_USER", None)
-            fhir_pw = env_dict.get("FHIR_PW", None)
-            fhir_token = env_dict.get("FHIR_TOKEN", None)
-            fhir_server_type = env_dict.get("FHIR_SERVER_TYPE", None)
-        else:
-            fhir_url = os.getenv("FHIR_ADDRESS", None)
-            fhir_user = os.getenv("FHIR_USER", None)
-            fhir_pw = os.getenv("FHIR_PW", None)
-            fhir_token = os.getenv("FHIR_TOKEN", None)
-            fhir_server_type = os.getenv("FHIR_SERVER_TYPE", None)
+        if train_state.get("query", None):
+            env_dict = train_state.get("env", None)
+            if env_dict:
+                fhir_url = env_dict.get("FHIR_ADDRESS", None)
+                fhir_user = env_dict.get("FHIR_USER", None)
+                fhir_pw = env_dict.get("FHIR_PW", None)
+                fhir_token = env_dict.get("FHIR_TOKEN", None)
+                fhir_server_type = env_dict.get("FHIR_SERVER_TYPE", None)
+            else:
+                fhir_url = os.getenv("FHIR_ADDRESS", None)
+                fhir_user = os.getenv("FHIR_USER", None)
+                fhir_pw = os.getenv("FHIR_PW", None)
+                fhir_token = os.getenv("FHIR_TOKEN", None)
+                fhir_server_type = os.getenv("FHIR_SERVER_TYPE", None)
 
-        fhir_client = PHTFhirClient(
-            server_url=fhir_url,
-            username=fhir_user,
-            password=fhir_pw,
-            token=fhir_token,
-            fhir_server_type=fhir_server_type,
-            disable_k_anon=True
-        )
-        loop = asyncio.get_event_loop()
-        query_result = loop.run_until_complete(fhir_client.execute_query(query=train_state["query"]))
+            fhir_client = PHTFhirClient(
+                server_url=fhir_url,
+                username=fhir_user,
+                password=fhir_pw,
+                token=fhir_token,
+                fhir_server_type=fhir_server_type,
+                disable_k_anon=True
+            )
+            loop = asyncio.get_event_loop()
+            query_result = loop.run_until_complete(fhir_client.execute_query(query=train_state["query"]))
 
-        output_file_name = train_state["query"]["data"]["filename"]
+            output_file_name = train_state["query"]["data"]["filename"]
 
-        # Create the file path in which to store the FHIR query results
-        data_dir = os.getenv("AIRFLOW_DATA_DIR", "/opt/station_data")
-        train_data_dir = os.path.join(data_dir, train_state["train_id"])
+            # Create the file path in which to store the FHIR query results
+            data_dir = os.getenv("AIRFLOW_DATA_DIR", "/opt/station_data")
+            train_data_dir = os.path.join(data_dir, train_state["train_id"])
 
-        if not os.path.isdir(train_data_dir):
-            os.mkdir(train_data_dir)
+            if not os.path.isdir(train_data_dir):
+                os.mkdir(train_data_dir)
 
-        train_data_dir = os.path.abspath(train_data_dir)
-        print("train data dir: ", train_data_dir)
+            train_data_dir = os.path.abspath(train_data_dir)
+            print("train data dir: ", train_data_dir)
 
-        train_data_path = fhir_client.store_query_results(query_result, storage_dir=train_data_dir,
-                                                          filename=output_file_name)
-        print("train data path: ", train_data_path)
-        host_data_path = os.path.join(os.getenv("STATION_DATA_DIR"), train_state["train_id"], output_file_name)
+            train_data_path = fhir_client.store_query_results(query_result, storage_dir=train_data_dir,
+                                                              filename=output_file_name)
+            print("train data path: ", train_data_path)
+            host_data_path = os.path.join(os.getenv("STATION_DATA_DIR"), train_state["train_id"], output_file_name)
 
-        # Add the file containing the fhir query results to the volumes configuration
-        query_data_volume = {
-            host_data_path: {
-                "bind": f"/opt/train_data/{output_file_name}",
-                "mode": "ro"
+            # Add the file containing the fhir query results to the volumes configuration
+            query_data_volume = {
+                host_data_path: {
+                    "bind": f"/opt/train_data/{output_file_name}",
+                    "mode": "ro"
+                }
             }
-        }
 
-        data_dir_env = {
-            "TRAIN_DATA_PATH": f"/opt/train_data/{output_file_name}"
-        }
+            data_dir_env = {
+                "TRAIN_DATA_PATH": f"/opt/train_data/{output_file_name}"
+            }
 
-        if isinstance(train_state.get("volumes"), dict):
-            train_state["volumes"] = {**query_data_volume, **train_state["volumes"]}
-        else:
-            train_state["volumes"] = query_data_volume
+            if isinstance(train_state.get("volumes"), dict):
+                train_state["volumes"] = {**query_data_volume, **train_state["volumes"]}
+            else:
+                train_state["volumes"] = query_data_volume
 
-        if train_state.get("env", None):
-            train_state["env"] = {**train_state["env"], **data_dir_env}
-        else:
-            train_state["env"] = data_dir_env
+            if train_state.get("env", None):
+                train_state["env"] = {**train_state["env"], **data_dir_env}
+            else:
+                train_state["env"] = data_dir_env
         return train_state
 
     @task()

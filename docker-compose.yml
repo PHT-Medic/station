@@ -2,43 +2,41 @@ version: '3.8'
 
 
 volumes:
-  pg_pht_station:
+  pg_station:
     external: True
 
 services:
   airflow:
-      build: './airflow'
-      volumes:
-        - /var/run/docker.sock:/var/run/docker.sock
-        # Station Private Key environment variable needs to be set and registered
-        - $STATION_PRIVATE_KEY_PATH:/opt/private_key.pem
-        - $STATION_DATA_DIR:$AIRFLOW_DATA_DIR
-      depends_on:
-        - pg_station
-      environment:
-        - FHIR_ADDRESS=$FHIR_SERVER_URL
-        - FHIR_USER=$FHIR_USER
-        - FHIR_PW=$FHIR_PW
-        - FHIR_TOKEN=$FHIR_TOKEN
-        - FHIR_SERVER_TYPE=$FHIR_SERVER_TYPE
-        - HARBOR_USER=$HARBOR_USER
-        - HARBOR_PW=$HARBOR_PW
-        - STATION_ID=$STATION_ID
-        - PRIVATE_KEY_PATH=/opt/private_key.pem
-        - HARBOR_API_URL=$HARBOR_URL
-        - AIRFLOW_USER=$AIRFLOW_USER
-        - AIRFLOW_PW=$AIRFLOW_PW
-        - STATION_DATA_DIR=$STATION_DATA_DIR
-      ports:
-        - 8080:8080
+    build: './airflow'
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Station Private Key environment variable needs to be set and registered
+      - $STATION_PRIVATE_KEY_PATH:/opt/private_key.pem
+      - $STATION_DATA_DIR:$AIRFLOW_DATA_DIR
+    depends_on:
+      - pg_station
+    environment:
+      - FHIR_ADDRESS=$FHIR_SERVER_URL
+      - FHIR_USER=$FHIR_USER
+      - FHIR_PW=$FHIR_PW
+      - FHIR_TOKEN=$FHIR_TOKEN
+      - FHIR_SERVER_TYPE=$FHIR_SERVER_TYPE
+      - HARBOR_USER=$HARBOR_USER
+      - HARBOR_PW=$HARBOR_PW
+      - STATION_ID=$STATION_ID
+      - PRIVATE_KEY_PATH=/opt/private_key.pem
+      - HARBOR_API_URL=$HARBOR_URL
+      - AIRFLOW_USER=$AIRFLOW_USER
+      - AIRFLOW_PW=$AIRFLOW_PW
+      - STATION_DATA_DIR=$STATION_DATA_DIR
+    ports:
+      - "8080:8080"
 
   pg_station:
     image: postgres:13
     volumes:
       - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
-      - pg_pht_station:/var/lib/postgresql/data
+      - pg_station:/var/lib/postgresql/data
     environment:
       - POSTGRES_USER=admin
       - POSTGRES_PASSWORD=admin
-    ports:
-      - 5432:5432
