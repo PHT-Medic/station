@@ -42,7 +42,7 @@ Open the `.env` file at the root of the repository and edit the following enviro
 
 3. Create the Docker volume for Postgres using:
     ```shell script
-    docker volume create pg_pht_station
+    docker volume create pg_station
     ```
 
 4. Run:
@@ -55,9 +55,9 @@ Open the `.env` file at the root of the repository and edit the following enviro
 1. Run `docker-compose up -d`. 
 2. Check that the logs do not contain any startup errors with  `docker-compose logs -f`.
 3. Go to `http://localhost:8080` and check whether you can see the web frontend of Apache Airflow.
-4. Login with the previously set user credentials for the airflow web interface
+4. Login to the airflow web interface with the previously set user credentials
 
 
-The [Train Container Library](https://gitlab.com/PersonalHealthTrain/implementations/germanmii/difuture/train-container-library)
-is used for processing in the DAGs.
+The [Train Container Library](https://github.com/PHT-Medic/train-container-library.git)
+is used for processing trains in the DAGs.
 
