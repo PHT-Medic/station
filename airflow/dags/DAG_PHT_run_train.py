@@ -52,6 +52,23 @@ def run_pht_train():
                                          ['repository', 'tag', 'env', 'volumes']]
         img = repository + ":" + tag
 
+        # check an process the volumes passed to the dag via the config
+        if volumes:
+            assert isinstance(volumes, dict)
+            # if a volume in the dictionary follows the docker format pass it as is
+
+            for key, item in volumes.items():
+                # check if docker volume keys are present and raise an error if not
+                if isinstance(item, dict):
+                    if not ("bind" in item and "mode" in item):
+                        raise ValueError("Incorrectly formatted docker volume, 'bind' and 'mode' keys are required")
+                # transform simple path:path volumes into correctly formatted docker read only volumes
+                elif isinstance(item, str):
+                    volumes[key] = {
+                        "bind": item,
+                        "mode": "ro"
+                    }
+
         train_id = repository.split("/")[-1]
         train_state_dict = {
             "train_id": train_id,
