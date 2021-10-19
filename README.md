@@ -32,6 +32,8 @@ Open the `.env` file at the root of the repository and edit the following enviro
 - `STATION_PRIVATE_KEY_PATH` path to the private key on the local filesystem that should be mounted as a volume
 - `AIRFLOW_USER` admin user to be created for the airflow instance 
 - `AIRFLOW_PW` password for the airflow admin user
+- `STATION_DATA_DIR` the absolute path of the directory where the station stores the input data for trains, this path is
+also used by the FHIR client to store the query results before passing them to trains
 
 
 ## Installation 
