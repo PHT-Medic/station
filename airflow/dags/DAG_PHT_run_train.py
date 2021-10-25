@@ -16,7 +16,7 @@ from airflow.utils.dates import days_ago
 
 from train_lib.docker_util.docker_ops import extract_train_config, extract_query_json
 from train_lib.security.SecurityProtocol import SecurityProtocol
-from train_lib.fhir import PHTFhirClient
+from train_lib.clients import PHTFhirClient
 from train_lib.docker_util.validate_master_image import validate_train_image
 
 default_args = {
