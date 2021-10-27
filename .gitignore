@@ -8,3 +8,5 @@ docs/_build/
 .venv
 /dags/credentials.conf
 $HOME
+rabbitmq/
+venv/

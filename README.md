@@ -19,11 +19,15 @@ of this distribution are:
     - 8081
 
 ## Setting up the station environment
+
 Open the `.env` file at the root of the repository and edit the following environment variables to match the local configuration. STATION_ID must be consistent to Vault and Harbor.
 - `FHIR_ADDRESS` the address of the default fhir server connected to the station (this can also be configured per train)
 - `FHIR_USER` username to authenticate against the FHIR server using Basic Auth
 - `FHIR_PW` password for Basic Auth
 - `FHIR_TOKEN` Token to authenticate against the FHIR server using Bearer Token
+- `CLIENT_ID` identifier of client with permission to access the fhir server 
+- `CLIENT_SECRET` secret of above client to authenticate against the provider
+- `OIDC_PROVIDER_URL` token url of Open ID connect provider e.g. keycloak, that is configured for the FHIR server
 - `FHIR_SERVER_TYPE` the type of fhir server (PHT FHIR client supports IBM, Hapi and Blaze FHIR servers)
 - `HARBOR_API_URL` the url of the central harbor instance
 - `HARBOR_USER` username to authenticate against harbor
