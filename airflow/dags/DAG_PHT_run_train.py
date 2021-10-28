@@ -219,7 +219,8 @@ def run_pht_train():
             # client.containers.remove(container_name)
             container = client.containers.run(train_state["img"], environment=environment, volumes=volumes,
                                               detach=True)
-        exit_code = container.wait()["StatusCode"]
+        container_output = container.wait()
+        exit_code = container_output["StatusCode"]
 
         def _copy(from_cont, from_path, to_cont, to_path):
             """
