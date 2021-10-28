@@ -82,12 +82,12 @@ def test_station_configuration():
         if fhir_pw and fhir_token:
             raise ValueError("Conflicting authentication information, both password and token are set.")
 
-        if fhir_user and not (fhir_pw or fhir_token):
-            raise ValueError(
-                "Incomplete FHIR credentials, either a token or a password need to be set for a fhir user.")
+        if not fhir_user and fhir_pw:
+            raise ValueError("Incomplete FHIR credentials, password set but no user given.")
 
-        if not fhir_user and (fhir_pw or fhir_token):
-            raise ValueError("Incomplete FHIR credentials, token or password set but no user given.")
+        if not fhir_token and not (fhir_user and fhir_pw):
+            print("No auth information given")
+            raise ValueError("No credentials given for fhir server")
 
         return {
             "FHIR_ADDRESS": fhir_url,
