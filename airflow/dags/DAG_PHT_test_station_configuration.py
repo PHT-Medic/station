@@ -8,7 +8,7 @@ from airflow.decorators import dag, task
 from airflow.operators.python import get_current_context
 from airflow.utils.dates import days_ago
 from train_lib.train.build_test_train import build_test_train
-from train_lib.fhir import PHTFhirClient
+from train_lib.clients import PHTFhirClient
 from train_lib.security import SecurityProtocol
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
 
