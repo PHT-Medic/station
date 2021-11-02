@@ -159,8 +159,7 @@ def run_pht_train():
                 fhir_server_type=fhir_server_type,
                 disable_k_anon=True
             )
-            loop = asyncio.get_event_loop()
-            query_result = loop.run_until_complete(fhir_client.execute_query(query=train_state["query"]))
+            query_result = fhir_client.execute_query(query=train_state["query"])
 
             output_file_name = train_state["query"]["data"]["filename"]
 
