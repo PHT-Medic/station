@@ -1,7 +1,4 @@
-import asyncio
 import sys
-from datetime import timedelta
-import json
 import os
 import os.path
 
@@ -10,7 +7,6 @@ from airflow.decorators import dag, task
 from airflow.operators.python import get_current_context
 
 from docker.errors import APIError
-from docker.types import Mount
 
 from airflow.utils.dates import days_ago
 
@@ -50,6 +46,9 @@ def run_pht_train():
         context = get_current_context()
         repository, tag, env, volumes = [context['dag_run'].conf.get(_, None) for _ in
                                          ['repository', 'tag', 'env', 'volumes']]
+
+        if not tag:
+            tag = "latest"
         img = repository + ":" + tag
 
         # check an process the volumes passed to the dag via the config
@@ -112,7 +111,8 @@ def run_pht_train():
         try:
             query = extract_query_json(train_state["img"])
             train_state["query"] = query
-        except:
+        except Exception as e:
+            print(e)
             train_state["query"] = None
             print("No query file found ")
 
@@ -135,33 +135,26 @@ def run_pht_train():
 
     @task()
     def execute_query(train_state):
+        print(train_state)
+        query = train_state.get("query", None)
+        if query:
+            print("Query found, setting up connection to FHIR server")
 
-        if train_state.get("query", None):
             env_dict = train_state.get("env", None)
             if env_dict:
                 fhir_url = env_dict.get("FHIR_ADDRESS", None)
-                fhir_user = env_dict.get("FHIR_USER", None)
-                fhir_pw = env_dict.get("FHIR_PW", None)
-                fhir_token = env_dict.get("FHIR_TOKEN", None)
-                fhir_server_type = env_dict.get("FHIR_SERVER_TYPE", None)
-            else:
-                fhir_url = os.getenv("FHIR_ADDRESS", None)
-                fhir_user = os.getenv("FHIR_USER", None)
-                fhir_pw = os.getenv("FHIR_PW", None)
-                fhir_token = os.getenv("FHIR_TOKEN", None)
-                fhir_server_type = os.getenv("FHIR_SERVER_TYPE", None)
+                # Check that there is a FHIR server specified in the configuration dictionary
+                if fhir_url:
+                    fhir_client = PHTFhirClient.from_dict(env_dict)
 
-            fhir_client = PHTFhirClient(
-                server_url=fhir_url,
-                username=fhir_user,
-                password=fhir_pw,
-                token=fhir_token,
-                fhir_server_type=fhir_server_type,
-                disable_k_anon=True
-            )
+                else:
+                    fhir_client = PHTFhirClient.from_env()
+            else:
+                fhir_client = PHTFhirClient.from_env()
+
             query_result = fhir_client.execute_query(query=train_state["query"])
 
-            output_file_name = train_state["query"]["data"]["filename"]
+            output_file_name = query["data"]["filename"]
 
             # Create the file path in which to store the FHIR query results
             data_dir = os.getenv("AIRFLOW_DATA_DIR", "/opt/station_data")
@@ -210,16 +203,20 @@ def run_pht_train():
         print("Env dict: ", environment)
 
         try:
+            print("Running image", train_state["img"])
             container = client.containers.run(train_state["img"], environment=environment, volumes=volumes,
-                                              detach=True)
+                                              detach=True, network_disabled=True, stderr=True, stdout=True)
         # If the container is already in use remove it
         except APIError as e:
-            # print(e)
-            # client.containers.remove(container_name)
+            print(e)
             container = client.containers.run(train_state["img"], environment=environment, volumes=volumes,
-                                              detach=True)
+                                              detach=True, network_disabled=True, stderr=True, stdout=True)
         container_output = container.wait()
         exit_code = container_output["StatusCode"]
+
+        if exit_code != 0:
+            print(container_output)
+            raise ValueError(f"The train execution returned a non zero exit code: {exit_code}")
 
         def _copy(from_cont, from_path, to_cont, to_path):
             """
@@ -297,7 +294,7 @@ def run_pht_train():
         print(type(to_container))
         # Rebase the train
         try:
-            img = to_container.commit(repository=train_state["repository"], tag="base")
+            img = to_container.commit(repository=train_state["repository"], tag=train_state["tag"])
             # remove executed containers -> only images needed from this point
             print('Removing containers')
             to_container.remove()
