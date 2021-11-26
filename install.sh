@@ -26,7 +26,7 @@ while [ $# -gt 0 ]; do
             exit 0;;
             --worker)
             worker=true;;
-          --update)
+            --update)
             update=true;;
             *)
             note "$usage"
@@ -56,10 +56,10 @@ if [ $update ]; then
   exit 0
 fi
 
-h2 "[Step $item]: checking if docker is installed ..."; let item+=1
+h2 "[Step $item]: checking if docker is installed ..."; ((item+=1))
 check_docker
 
-h2 "[Step $item]: checking docker-compose is installed ..."; let item+=1
+h2 "[Step $item]: checking docker-compose is installed ..."; ((item+=1))
 check_dockercompose
 
 echo ""
@@ -71,7 +71,16 @@ then
 fi
 echo ""
 
-h2 "[Step $item]: starting station ..."
+h2 "[Step $item]: downloading installer ..."; ((item+=1))
+docker pull ghcr.io/pht-medic/station-installer:latest
+
+
+h2 "[Step $item]: Running the installer ..."; ((item+=1))
+docker run -v "$(pwd)/scripts:/home/scripts:rw" -v "$(pwd)/station.yml:/home/station.yml:ro" -v "$(pwd)/docker-compose.yml:/home/docker-compose.yml:rw" ghcr.io/pht-medic/station-installer:latest
+
+success $"----Installation succeeded.----"
+
+h2 "[Step $item]: Starting the station ..."; ((item+=1))
 docker-compose up -d
 
 success $"----The station has been installed and started successfully.----"

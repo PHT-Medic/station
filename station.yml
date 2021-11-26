@@ -1,0 +1,46 @@
+# Base configuration of the station
+station:
+  # Identifier of the station must match the identifier of the station in the central UI
+  id: 1
+  # Absolute path to the private that should be used in the security protocol, must match the public key registered in
+  # the central UI
+  private_key_path: /path/to/private/key
+  # Absolute path to the directory in which the data that the station provides to trains should be stored
+  storage_path: /path/to/storage
+
+  # Configuration of the station API
+  backend:
+    port: 8000
+    # Fernet key to encrypt secrets (such as fhir server connection credentials) stored in the database
+    fernet_key: XvKQY_wa9EtUh2j8numvvzKzamXLH4DvVmBAkopYdY4=
+    # optional sqlalchemy connection string to an external database
+    # sqlalchemy_conn: sqlite:///data.db
+
+  frontend:
+    port: 8081
+
+  # optional database configuration
+  db:
+    admin_user: admin
+    admin_password: admin
+    port: 5432
+
+  minio:
+    port: 9000
+    access_key: minio_key
+    secret_key: minio_secret
+
+
+airflow:
+  # Path to the Airflow configuration file if a custom one should be used
+  port: 8080
+  airflow_config_path: /path/to/airflow/config
+  admin_user: admin
+  admin_password: admin
+
+
+# Configure connection to the docker registry
+registry:
+  url: https://dev-harbor.grafm.de
+  username: admin
+  password: admin
