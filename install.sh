@@ -49,7 +49,7 @@ if [ $update ]; then
   h2 "Updating station software"
   docker-compose -f docker-compose.yml pull
   h2 "Shutting down station  ..."
-  docker-compose down -v
+  docker-compose down
   h2 "Restarting station..."
   docker-compose up -d
   success $"----The station has been updated successfully.----"
@@ -62,25 +62,24 @@ check_docker
 h2 "[Step $item]: checking docker-compose is installed ..."; ((item+=1))
 check_dockercompose
 
-echo ""
 
 if [ -n "$(docker-compose ps -q)"  ]
 then
     note "stopping existing station instance ..."
-    docker-compose down -v
+    docker-compose down
 fi
 echo ""
 
 h2 "[Step $item]: downloading installer ..."; ((item+=1))
 docker pull ghcr.io/pht-medic/station-installer:latest
 
-
+echo ""
 h2 "[Step $item]: Running the installer ..."; ((item+=1))
 docker run -v "$(pwd)/scripts:/home/scripts:rw" -v "$(pwd)/station.yml:/home/station.yml:ro" -v "$(pwd)/docker-compose.yml:/home/docker-compose.yml:rw" ghcr.io/pht-medic/station-installer:latest
-
+echo ""
 success $"----Installation succeeded.----"
 
 h2 "[Step $item]: Starting the station ..."; ((item+=1))
 docker-compose up -d
-
+echo ""
 success $"----The station has been installed and started successfully.----"
