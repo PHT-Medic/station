@@ -319,6 +319,8 @@ def run_pht_train():
             stream=False, decode=False
         )
         print(response)
+        client.images.remove(f'{train_state["img"]}:{train_state["tag"]}', noprune=False, force=True)
+        client.images.remove(f'{train_state["img"]}:base', noprune=False, force=True)
 
     train_state = get_train_image_info()
     train_state = pull_docker_image(train_state)
