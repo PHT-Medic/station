@@ -9,14 +9,15 @@ of this distribution are:
   for the PHT Station.
 * The used Executor is the `LocalExecutor`.  We **plan** to also support `CeleryExecutor` in the future, but this is currently not the case.
 
+The [Train Container Library](https://github.com/PHT-Medic/train-container-library.git)
+is used for processing trains in the DAGs.
+
 ## Requirements
 
 * `docker` and `docker-compose` need to be installed
 * The following ports are used by the station and need to be available on the host:
     - 5432
-    - 8001
     - 8080
-    - 8081
 
 ## Setting up the station environment
 
@@ -57,13 +58,12 @@ also used by the FHIR client to store the query results before passing them to t
     ```
 
 
-## First Steps with Running Airflow
+## First Steps with running the station
 1. Run `docker-compose up -d`. 
 2. Check that the logs do not contain any startup errors with  `docker-compose logs -f`.
-3. Go to `http://localhost:8080` and check whether you can see the web frontend of Apache Airflow.
+3. Go to `http://localhost:8080` and check whether you can see the web interface of Apache Airflow.
 4. Login to the airflow web interface with the previously set user credentials
 
 
-The [Train Container Library](https://github.com/PHT-Medic/train-container-library.git)
-is used for processing trains in the DAGs.
+
 
