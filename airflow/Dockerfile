@@ -25,7 +25,7 @@ RUN curl -LO https://storage.googleapis.com/container-diff/latest/container-diff
     install container-diff-linux-amd64 /usr/local/bin/container-diff
 
 # install airflow
-RUN pip install "apache-airflow[celery,crypto,hashicorp,password,postgres,redis]==2.2.0" --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.2.0/constraints-3.8.txt"
+RUN pip install "apache-airflow[celery,crypto,hashicorp,password,postgres,redis]==2.2.2" --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.2.2/constraints-3.8.txt"
 
 RUN mkdir /opt/train_data
 COPY requirements.txt /tmp/requirements.txt
