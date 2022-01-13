@@ -56,7 +56,11 @@ also used by the FHIR client to store the query results before passing them to t
     ```shell script
     docker-compose build
     ```
+## Troubleshooting   
 
+1. Problemes with ```docker-compose build``` can be bypassed by pulling a pre-built image. 
+For this, the line " build: './airflow "  in the docker-compose.yml file has to be replaced with " image:'ghcr.io/pht-medic/station-airflow:latest' "
+   
 
 ## First Steps with running the station
 1. Run `docker-compose up -d`. 
