@@ -15,14 +15,14 @@ on:
   pull_request:
 
 env:
-  IMAGE_NAME: station-airflow
+  IMAGE_NAME: airflow
 
 
 jobs:
   # Push image to GitHub Packages.
   # See also https://docs.docker.com/docker-hub/builds/
   push:
-    runs-on: [self-hosted, linux, x64, docker]
+    runs-on: [self-hosted, docker]
     permissions:
       packages: write
       contents: read
