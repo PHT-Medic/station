@@ -11,9 +11,10 @@ from docker.errors import APIError
 from airflow.utils.dates import days_ago
 
 from train_lib.docker_util.docker_ops import extract_train_config, extract_query_json
-from train_lib.security.SecurityProtocol import SecurityProtocol
+from train_lib.security.protocol import SecurityProtocol
 from train_lib.clients import PHTFhirClient
 from train_lib.docker_util.validate_master_image import validate_train_image
+from train_lib.security.train_config import TrainConfig
 
 default_args = {
     'owner': 'airflow',
@@ -105,7 +106,7 @@ def run_pht_train():
     @task()
     def extract_config_and_query(train_state):
         config = extract_train_config(train_state["img"])
-        train_state["config"] = config
+        train_state["config"] = config.dict(by_alias=True)
 
         # try to extract th query json if it exists under the specified path
         try:
@@ -118,16 +119,16 @@ def run_pht_train():
 
         return train_state
 
-    @task()
-    def validate_against_master_image(train_state):
-        master_image = train_state["config"]["master_image"]
-        img = train_state["img"]
-        validate_train_image(train_img=img, master_image=master_image)
-        return train_state
+    # @task()
+    # def validate_against_master_image(train_state):
+    #     master_image = train_state["config"]["master_image"]
+    #     img = train_state["img"]
+    #     validate_train_image(train_img=img, master_image=master_image)
+    #     return train_state
 
     @task()
     def pre_run_protocol(train_state):
-        config = train_state["config"]
+        config = TrainConfig(**train_state["config"])
         sp = SecurityProtocol(os.getenv("STATION_ID"), config=config)
         sp.pre_run_protocol(train_state["img"], os.getenv("PRIVATE_KEY_PATH"))
 
@@ -248,7 +249,7 @@ def run_pht_train():
     @task()
     def post_run_protocol(train_state):
 
-        config = train_state["config"]
+        config = TrainConfig(**train_state["config"])
         sp = SecurityProtocol(os.getenv("STATION_ID"), config=config)
         sp.post_run_protocol(img=train_state["img"],
                              private_key_path=os.getenv("PRIVATE_KEY_PATH"))
@@ -319,13 +320,13 @@ def run_pht_train():
             stream=False, decode=False
         )
         print(response)
-        client.images.remove(f'{train_state["img"]}:{train_state["tag"]}', noprune=False, force=True)
-        client.images.remove(f'{train_state["img"]}:base', noprune=False, force=True)
+        client.images.remove(f'{train_state["repository"]}:{train_state["tag"]}', noprune=False, force=True)
+        client.images.remove(f'{train_state["repository"]}:base', noprune=False, force=True)
 
     train_state = get_train_image_info()
     train_state = pull_docker_image(train_state)
     train_state = extract_config_and_query(train_state)
-    train_state = validate_against_master_image(train_state)
+    # train_state = validate_against_master_image(train_state)
     train_state = pre_run_protocol(train_state)
     train_state = execute_query(train_state)
     train_state = execute_container(train_state)

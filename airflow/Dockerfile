@@ -37,7 +37,7 @@ RUN pip install -r /tmp/requirements.txt
 COPY airflow.cfg /root/airflow/airflow.cfg
 COPY ./dags /root/airflow/dags
 
-RUN pip install git+https://github.com/PHT-Medic/train-container-library.git
+RUN pip install git+https://github.com/PHT-Medic/train-container-library.git@master
 
 COPY entrypoint.sh /root/entrypoint.sh
 RUN chmod +x /root/entrypoint.sh
