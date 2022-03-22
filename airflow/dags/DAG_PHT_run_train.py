@@ -213,6 +213,9 @@ def run_pht_train():
             container = client.containers.run(train_state["img"], environment=environment, volumes=volumes,
                                               detach=True, network_disabled=True, stderr=True, stdout=True)
         container_output = container.wait()
+        # Print The logs generated from std out und err out during the container run
+        logs = container.logs().decode("utf-8")
+        print(f"logs_container_start({logs})logs_end")
         exit_code = container_output["StatusCode"]
 
         if exit_code != 0:
