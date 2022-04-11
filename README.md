@@ -25,7 +25,7 @@ configuration. STATION_ID must be consistent to Vault and Harbor.
 - `STATION_PRIVATE_KEY_PATH` path to the private key on the local filesystem that should be mounted as a volume
 - `AIRFLOW_USER` admin user to be created for the airflow instance
 - `AIRFLOW_PW` password for the airflow admin user
-- `HARBOR_API_URL` the url of the central harbor instance
+- `HARBOR_URL` the url of the central harbor instance
 - `HARBOR_USER` username to authenticate against harbor
 - `HARBOR_PW` password to authenticate against harbor
 - `STATION_DATA_DIR` the absolute path of the directory where the station stores the input data for trains, this path is

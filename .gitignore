@@ -10,3 +10,4 @@ docs/_build/
 $HOME
 rabbitmq/
 venv/
+.env
