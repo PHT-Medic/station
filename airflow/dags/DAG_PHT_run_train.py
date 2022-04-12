@@ -130,7 +130,10 @@ def run_pht_train():
     def pre_run_protocol(train_state):
         config = TrainConfig(**train_state["config"])
         sp = SecurityProtocol(os.getenv("STATION_ID"), config=config)
-        sp.pre_run_protocol(train_state["img"], os.getenv("PRIVATE_KEY_PATH"))
+
+        private_key_password = os.getenv("PRIVATE_KEY_PASSWORD", None)
+        sp.pre_run_protocol(train_state["img"], os.getenv("PRIVATE_KEY_PATH"),
+                            private_key_password=private_key_password)
 
         return train_state
 
@@ -254,8 +257,11 @@ def run_pht_train():
 
         config = TrainConfig(**train_state["config"])
         sp = SecurityProtocol(os.getenv("STATION_ID"), config=config)
+        private_key_password = os.getenv("PRIVATE_KEY_PASSWORD", None)
         sp.post_run_protocol(img=train_state["img"],
-                             private_key_path=os.getenv("PRIVATE_KEY_PATH"))
+                             private_key_path=os.getenv("PRIVATE_KEY_PATH"),
+                             private_key_password=private_key_password
+                             )
 
         return train_state
 

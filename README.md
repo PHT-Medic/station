@@ -18,11 +18,12 @@ is used for processing trains in the DAGs.
     - 8080
 
 ## Setting up the station environment
-
-Open the `.env` file at the root of the repository and edit the following environment variables to match the local
+Copy the `.env.tmpl` file at the root of the repository to `.env` to configure your local environment.  
+Open the `.env` file and edit the following environment variables to match the local
 configuration. STATION_ID must be consistent to Vault and Harbor.
 - `STATION_ID` Chosen identifier of the station (match central UI configuration)
 - `STATION_PRIVATE_KEY_PATH` path to the private key on the local filesystem that should be mounted as a volume
+- `PRIVATE_KEY_PASSWORD` optional password for the private key if it is encrypted
 - `AIRFLOW_USER` admin user to be created for the airflow instance
 - `AIRFLOW_PW` password for the airflow admin user
 - `HARBOR_URL` the url of the central harbor instance
@@ -55,6 +56,15 @@ configuration. STATION_ID must be consistent to Vault and Harbor.
     ```shell script
     docker-compose build
     ```
+## First Steps with running the station
+
+1. Run `docker-compose up -d`.
+2. Check that the logs do not contain any startup errors with  `docker-compose logs -f`.
+3. Go to `http://localhost:8080` and check whether you can see the web interface of Apache Airflow.
+4. Login to the airflow web interface with the previously set user credentials
+
+
+## Troubleshooting/FAQ
 
 ### Using pre-built images
 
@@ -73,13 +83,6 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
 # ------------- ommitted ------------
 ```
-
-## First Steps with running the station
-
-1. Run `docker-compose up -d`.
-2. Check that the logs do not contain any startup errors with  `docker-compose logs -f`.
-3. Go to `http://localhost:8080` and check whether you can see the web interface of Apache Airflow.
-4. Login to the airflow web interface with the previously set user credentials
 
 
 
