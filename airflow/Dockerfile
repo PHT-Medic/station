@@ -1,6 +1,8 @@
 FROM ubuntu
 MAINTAINER michael.graf@uni-tuebingen.de
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 EXPOSE 8080 5555 8793
 
 # install python3.8 and os dependencies
@@ -37,7 +39,8 @@ RUN pip install -r /tmp/requirements.txt
 COPY airflow.cfg /root/airflow/airflow.cfg
 COPY ./dags /root/airflow/dags
 # install train container library
-RUN pip install git+https://github.com/PHT-Medic/train-container-library.git@master
+
+RUN pip install git+https://github.com/PHT-Medic/train-container-library.git
 
 COPY entrypoint.sh /root/entrypoint.sh
 RUN chmod +x /root/entrypoint.sh
