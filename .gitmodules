@@ -1,0 +1,6 @@
+[submodule "station-backend"]
+	path = station-backend
+	url = https://github.com/PHT-Medic/station-backend.git
+[submodule "station-ui"]
+	path = station-ui
+	url = https://github.com/PHT-Medic/station-ui.git
