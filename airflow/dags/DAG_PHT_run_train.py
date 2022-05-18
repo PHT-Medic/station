@@ -52,7 +52,7 @@ def run_pht_train():
             tag = "latest"
         img = repository + ":" + tag
 
-        # check an process the volumes passed to the dag via the config
+        # check and process the volumes passed to the dag via the config
         if volumes:
             assert isinstance(volumes, dict)
             # if a volume in the dictionary follows the docker format pass it as is
