@@ -78,7 +78,7 @@ services:
     # remove the build command
     build: './airflow'
     # replace with the image command
-    image: ghcr.io/pht-medic/station-airflow:latest
+    image: ghcr.io/pht-medic/airflow:latest
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 # ------------- ommitted ------------
