@@ -72,7 +72,7 @@ If there are issues while building the airflow container you can use our prebuil
 Edit the airflow service in the docker-compose.yml file and replace the build command with our prebuilt image:
 
 ```yaml
-# ------------- ommitted ------------
+# ------------- omitted ------------
 services:
   airflow:
     # remove the build command
@@ -81,9 +81,6 @@ services:
     image: ghcr.io/pht-medic/airflow:latest
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-# ------------- ommitted ------------
+# ------------- omitted ------------
 ```
-
-
-
 
