@@ -1,3 +1,4 @@
+import json
 import sys
 import os
 import os.path
@@ -110,7 +111,7 @@ def run_pht_train():
 
         # try to extract th query json if it exists under the specified path
         try:
-            query = extract_query_json(train_state["img"])
+            query = json.loads(extract_query_json(train_state["img"]))
             train_state["query"] = query
         except Exception as e:
             print(e)
