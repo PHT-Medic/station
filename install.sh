@@ -71,11 +71,17 @@ fi
 echo ""
 
 h2 "[Step $item]: downloading installer ..."; ((item+=1))
-docker pull ghcr.io/pht-medic/station-installer:latest
+docker pull ghcr.io/pht-medic/station-ctl:latest
 
 echo ""
-h2 "[Step $item]: Running the installer ..."; ((item+=1))
-docker run -v "$(pwd)/scripts:/home/scripts:rw" -v "$(pwd)/station.yml:/home/station.yml:ro" -v "$(pwd)/docker-compose.yml:/home/docker-compose.yml:rw" ghcr.io/pht-medic/station-installer:latest
+h2 "[Step $item]: installing ..."; ((item+=1))
+docker run -it \
+  -v "$(pwd):/mnt/station:rw" \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -e "PHT_TEMPLATE_DIR=/home/station/station/ctl/templates" \
+  ghcr.io/pht-medic/station-ctl:latest install \
+  --install-dir /mnt/station \
+  --host-path "$(pwd)"
 echo ""
 success $"----Installation succeeded.----"
 

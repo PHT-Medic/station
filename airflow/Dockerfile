@@ -40,6 +40,7 @@ COPY airflow.cfg /root/airflow/airflow.cfg
 COPY ./dags /root/airflow/dags
 # install train container library
 
+
 RUN pip install git+https://github.com/PHT-Medic/train-container-library.git
 
 COPY entrypoint.sh /root/entrypoint.sh
