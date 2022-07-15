@@ -1,0 +1,76 @@
+# configure station variables
+station_id: "218f9254-07aa-4297-961b-4a778e695946"
+version: "latest"
+
+# station runtime environment set to development to allow for debugging and reduced security settings
+# if no value is given or any value other than 'development' is given it defaults to a production environment
+environment: "production"
+
+# configure the admin password for the station (username: admin)
+admin_password: "admin"
+
+station_data_dir: ""
+
+# Configure authentication for central services
+central:
+  api_url: "https://staging-pht.tada5hi.net/api"
+  # Robot credentials for accessing central services, these can be obtained in the central UI
+  robot_id: "central-robot-id"
+  robot_secret: "central-robot-secret"
+  private_key: "/path/to/private_key.pem"
+  # optional password for private key
+  private_key_passphrase: "admin"
+
+http:
+  port: 80
+
+https:
+  port: 443
+  domain: "station.localhost"
+  # list of path to certificate files (cert/key)
+  certs:
+    - cert: "example-cert.pem"
+      key: "example-key.pem"
+
+
+traefik:
+  dashboard:
+    port: 8081
+
+
+# Configures the address and credentials for the central container registry
+registry:
+  address:
+  password:
+  user:
+  project:
+# configure admin user for the postgres database
+db:
+  admin_user: "admin"
+  admin_password: "admin"
+
+api:
+  # Fernet key for encryption of sensitive values stored in the database
+  fernet_key: 'your_fernet_key'
+
+# configure airflow connection
+airflow:
+  admin_user: "admin"
+  admin_password: "admin"
+  config_file: null
+  extra_dags_dir: "./dags"
+
+
+# Configure the connection to the authentication server
+auth:
+  host: "127.0.0.1"
+  port: 3010
+  robot_id: "your_robot_id"
+  robot_secret: '**********'
+
+# configure minio connection
+minio:
+  admin_user: "minio_access_key"
+  admin_password: "admin"
+
+
