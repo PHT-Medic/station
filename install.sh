@@ -86,6 +86,7 @@ echo ""
 success $"----Installation succeeded.----"
 
 h2 "[Step $item]: Starting the station ..."; ((item+=1))
+echo ""
 docker-compose up -d
 echo ""
 success $"----The station has been installed and started successfully.----"
