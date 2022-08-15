@@ -1,0 +1,76 @@
+# Set the station id obtained in the central user interface
+station_id: ""
+version: "latest"
+
+# station runtime environment set to development to allow for debugging and reduced security settings
+# if no value is given or any value other than 'development' is given it defaults to a production environment
+environment: "production"
+
+# configure the admin password for the station (username: admin)
+admin_password: ""
+
+station_data_dir: ""
+
+# Configure authentication for central services
+central:
+  api_url: ""
+  # Robot credentials for accessing central services, these can be obtained in the central UI
+  robot_id: "central-robot-id"
+  robot_secret: "central-robot-secret"
+  private_key: "/path/to/private_key.pem"
+  # optional password for private key
+  private_key_passphrase: "admin"
+
+http:
+  port: 80
+
+https:
+  port: 443
+  domain: ""
+  # list of path to certificate files (cert/key)
+  certs:
+    - cert: ""
+      key: ""
+
+
+traefik:
+  dashboard:
+    port: 8081
+
+
+# Configures the address and credentials for the central container registry
+registry:
+  address:
+  password:
+  user:
+  project:
+# configure admin user for the postgres database
+db:
+  admin_user: "admin"
+  admin_password: "admin"
+
+api:
+  # Fernet key for encryption of sensitive values stored in the database
+  fernet_key: ""
+
+# configure airflow connection
+airflow:
+  admin_user: "admin"
+  admin_password: "admin"
+  config_file: null
+  extra_dags_dir: "./dags"
+
+
+# Configure the connection to the authentication server
+auth:
+  host: ""
+  port: ""
+  robot_id: ""
+  robot_secret: ""
+
+# configure minio connection
+minio:
+  admin_user: ""
+  admin_password: ""
+
+
