@@ -14,10 +14,18 @@ For more detailed instructions visit [documentation](https://pht-medic.github.io
 
 ## Introduction
 The station software consists of several services:
+
 * A user interface that allows the user to manage the station as well as run and configure trains.
 * The station API as central endpoint into the other services
-* An apache airflow instance that is responsible for executing the trains and other long running tasks
-* 
+* A postgres database used by airflow and the API
+* An [apache airflow](https://airflow.apache.org/) instance that is responsible for executing the trains and other long running tasks
+* A [minio](https://minio.io/) instance that is responsible for storing the data sets and models
+* Redis for caching
+* A [traefik](https://traefik.io/) reverse proxy for tls termination and load balancing, this allows the dynamic addition
+of new FHIR project warehouses with TLS enabled.
+* Optional blaze fhir server
+
+These services are managed by a docker-compose file, which is created based on your input using a containerized installer.
 
 ## Requirements
 
