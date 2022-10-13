@@ -43,7 +43,7 @@ def test_station_configuration():
     @task()
     def test_docker():
         client = docker.from_env()
-        registry_address = os.getenv("HARBOR_API_URL").split("//")[-1]
+        registry_address = os.getenv("HARBOR_URL").split("//")[-1]
 
         client.login(username=os.getenv("HARBOR_USER"), password=os.getenv("HARBOR_PW"),
                      registry=registry_address)
