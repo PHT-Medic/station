@@ -11,6 +11,7 @@ from cryptography.hazmat.primitives.serialization import load_pem_private_key
 # Operators; we need this to operate!
 from airflow.operators.bash import BashOperator
 from airflow.utils.dates import days_ago
+import docker.types
 
 # These args will get passed on to each operator
 # You can override them on a per-task basis during operator initialization
@@ -138,6 +139,26 @@ def test_station_configuration():
 
         print("Private key loaded successfully.")
 
+    @task()
+    def test_gpu_docker():
+        smi_image = "nvidia/cuda:10.0-base-ubuntu18.04"
+        client = docker.from_env()
+        device_request = docker.types.DeviceRequest(count=-1, capabilities=[['gpu']])
+        container = client.containers.run(
+            image=smi_image,
+            command="nvidia-smi",
+            auto_remove=True,
+            detach=True,
+            device_requests=[device_request]
+        )
+        container.wait()
+        output = container.logs()
+        print(output)
+
+
+
+
+
 
 
     test_docker()
@@ -147,6 +168,7 @@ def test_station_configuration():
     if dag_config["query"]:
         test_fhir_query(dag_config, fhir_config)
     test_load_private_key()
+    test_gpu_docker()
 
 
 configuration_dag = test_station_configuration()
