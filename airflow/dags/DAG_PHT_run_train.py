@@ -48,7 +48,7 @@ def run_pht_train():
     def get_train_image_info():
         context = get_current_context()
         repository, tag, env, volumes, gpu = [context['dag_run'].conf.get(_, None) for _ in
-                                         ['repository', 'tag', 'env', 'volumes', 'gpu']]
+                                              ['repository', 'tag', 'env', 'volumes', 'gpus']]
 
         if not tag:
             tag = "latest"
@@ -79,7 +79,7 @@ def run_pht_train():
             "img": img,
             "env": env,
             "volumes": volumes,
-            "gpu": gpu
+            "gpus": gpu
         }
 
         return train_state_dict
@@ -209,14 +209,16 @@ def run_pht_train():
         print("Volumes", train_state["volumes"])
         print("Env dict: ", environment)
 
-        gpu_config = train_state.get("gpu", None)
+        gpu_config = train_state.get("gpus", None)
         print("GPU config: ", gpu_config)
         if gpu_config:
             if isinstance(gpu_config, str) and gpu_config.lower() == "all":
                 device_request = docker.types.DeviceRequest(count=-1, capabilities=[['gpu']])
             elif isinstance(gpu_config, list):
                 if all([isinstance(gpu, int) for gpu in gpu_config]):
-                    device_request = docker.types.DeviceRequest(count=gpu_config, capabilities=[['gpu']])
+
+                    device_request = docker.types.DeviceRequest(device_ids=[",".join(gpu_config)],
+                                                                capabilities=[['gpu']])
                 else:
                     raise ValueError(f"Invalid gpu configuration: {gpu_config}. Must be a list of integers or 'all'")
             else:
@@ -233,7 +235,7 @@ def run_pht_train():
                 network_disabled=True,
                 stderr=True,
                 stdout=True,
-                device_requests=device_request
+                device_requests=[device_request]
             )
         # If the container is already in use remove it
         except APIError as e:
