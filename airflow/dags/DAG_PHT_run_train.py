@@ -4,6 +4,7 @@ import os
 import os.path
 
 import docker
+import docker.types
 from airflow.decorators import dag, task
 from airflow.operators.python import get_current_context
 
@@ -46,8 +47,8 @@ def run_pht_train():
     @task()
     def get_train_image_info():
         context = get_current_context()
-        repository, tag, env, volumes = [context['dag_run'].conf.get(_, None) for _ in
-                                         ['repository', 'tag', 'env', 'volumes']]
+        repository, tag, env, volumes, gpu = [context['dag_run'].conf.get(_, None) for _ in
+                                         ['repository', 'tag', 'env', 'volumes', 'gpu']]
 
         if not tag:
             tag = "latest"
@@ -77,7 +78,8 @@ def run_pht_train():
             "tag": tag,
             "img": img,
             "env": env,
-            "volumes": volumes
+            "volumes": volumes,
+            "gpu": gpu
         }
 
         return train_state_dict
@@ -207,10 +209,32 @@ def run_pht_train():
         print("Volumes", train_state["volumes"])
         print("Env dict: ", environment)
 
+        gpu_config = train_state.get("gpu", None)
+        print("GPU config: ", gpu_config)
+        if gpu_config:
+            if isinstance(gpu_config, str) and gpu_config.lower() == "all":
+                device_request = docker.types.DeviceRequest(count=-1, capabilities=[['gpu']])
+            elif isinstance(gpu_config, list):
+                if all([isinstance(gpu, int) for gpu in gpu_config]):
+                    device_request = docker.types.DeviceRequest(count=gpu_config, capabilities=[['gpu']])
+                else:
+                    raise ValueError(f"Invalid gpu configuration: {gpu_config}. Must be a list of integers or 'all'")
+            else:
+                raise ValueError(f"Invalid gpu configuration: {gpu_config}. Must be a list of integers or 'all'")
+        else:
+            device_request = None
         try:
             print("Running image", train_state["img"])
-            container = client.containers.run(train_state["img"], environment=environment, volumes=volumes,
-                                              detach=True, network_disabled=True, stderr=True, stdout=True)
+            container = client.containers.run(
+                train_state["img"],
+                environment=environment,
+                volumes=volumes,
+                detach=True,
+                network_disabled=True,
+                stderr=True,
+                stdout=True,
+                device_requests=device_request
+            )
         # If the container is already in use remove it
         except APIError as e:
             print(e)

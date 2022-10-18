@@ -60,6 +60,7 @@ def test_station_configuration():
     def get_fhir_server_config(config):
 
         env_dict = config.get("env", None)
+        print(env_dict)
         if env_dict:
             fhir_url = env_dict.get("FHIR_ADDRESS", None)
             fhir_user = env_dict.get("FHIR_USER", None)
@@ -145,15 +146,15 @@ def test_station_configuration():
         client = docker.from_env()
         device_request = docker.types.DeviceRequest(count=-1, capabilities=[['gpu']])
         container = client.containers.run(
-            image=smi_image,
+            smi_image,
             command="nvidia-smi",
-            auto_remove=True,
             detach=True,
             device_requests=[device_request]
         )
         container.wait()
         output = container.logs()
-        print(output)
+        print(output.decode("utf-8"))
+        container.remove()
 
 
 
