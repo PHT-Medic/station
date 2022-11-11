@@ -94,7 +94,10 @@ function check_dockercompose {
                         exit 1
                 fi
         else
-                error "Failed to parse docker-compose version."
-                exit 1
+                if ! [[ $(docker-compose version) =~ (([0-9]+)\.([0-9]+)([\.0-9]*)) ]]
+                then
+                        error "Failed to parse docker-compose version."
+                        exit 1
+                fi
         fi
 }
