@@ -71,10 +71,12 @@ fi
 echo ""
 
 h2 "[Step $item]: downloading installer ..."; ((item+=1))
+echo ""
 docker pull ghcr.io/pht-medic/station-ctl:latest
 
 echo ""
 h2 "[Step $item]: installing ..."; ((item+=1))
+echo ""
 docker run -it \
   -v "$(pwd):/mnt/station:rw" \
   -v /var/run/docker.sock:/var/run/docker.sock \
