@@ -66,6 +66,7 @@ check_dockercompose
 if [ -n "$(docker-compose ps -q)"  ]
 then
     note "stopping existing station instance ..."
+    echo ""
     docker-compose down
 fi
 echo ""
@@ -77,7 +78,7 @@ docker pull ghcr.io/pht-medic/station-ctl:latest
 echo ""
 h2 "[Step $item]: installing ..."; ((item+=1))
 echo ""
-docker run -it \
+docker run -it --rm \
   -v "$(pwd):/mnt/station:rw" \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -e "PHT_TEMPLATE_DIR=/home/station/station/ctl/templates" \
