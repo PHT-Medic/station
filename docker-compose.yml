@@ -32,7 +32,7 @@ services:
     ports:
       - "8080:8080"
 
-  pg_station:
+  postgres:
     image: postgres:13
     volumes:
       - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
