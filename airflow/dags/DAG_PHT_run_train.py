@@ -235,7 +235,7 @@ def run_pht_train():
                 network_disabled=True,
                 stderr=True,
                 stdout=True,
-                device_requests=[device_request]
+                device_requests=[device_request] if device_request else []
             )
         # If the container is already in use remove it
         except APIError as e:
