@@ -88,6 +88,11 @@ docker run -it --rm \
 echo ""
 success $"----Installation succeeded.----"
 
+h2 "[Step $item]: Downloading docker images..."; ((item+=1))
+echo ""
+docker-compose pull
+echo ""
+
 h2 "[Step $item]: Starting the station ..."; ((item+=1))
 echo ""
 docker-compose up -d
