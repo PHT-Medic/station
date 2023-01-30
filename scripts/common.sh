@@ -48,7 +48,7 @@ set -e
 function check_docker {
         if ! docker --version &> /dev/null
         then
-                error "Need to install docker(17.06.0+) first and run this script again."
+                error "Need to install docker(20.10.9+) first and run this script again."
                 exit 1
         fi
 
@@ -61,9 +61,9 @@ function check_docker {
 
                 note "docker version: $docker_version"
                 # the version of docker does not meet the requirement
-                if [ "$docker_version_part1" -lt 17 ] || ([ "$docker_version_part1" -eq 17 ] && [ "$docker_version_part2" -lt 6 ])
+                if [ "$docker_version_part1" -lt 20 ] || ([ "$docker_version_part1" -eq 10 ] && [ "$docker_version_part2" -lt 9 ])
                 then
-                        error "Need to upgrade docker package to 17.06.0+."
+                        error "Need to upgrade docker package to 20.10.9+."
                         exit 1
                 fi
         else
@@ -73,14 +73,14 @@ function check_docker {
 }
 
 function check_dockercompose {
-        if ! docker-compose --version &> /dev/null
+        if ! docker compose version &> /dev/null
         then
-                error "Need to install docker-compose(1.18.0+) by yourself first and run this script again."
+                error "Need to install docker-compose(2.10.1+) by yourself first and run this script again."
                 exit 1
         fi
 
         # docker-compose has been installed, check its version
-        if [[ $(docker-compose --version) =~ (([0-9]+)\.([0-9]+)([\.0-9]*)) ]]
+        if [[ $(docker compose version) =~ (([0-9]+)\.([0-9]+)([\.0-9]*)) ]]
         then
                 docker_compose_version=${BASH_REMATCH[1]}
                 docker_compose_version_part1=${BASH_REMATCH[2]}
@@ -88,13 +88,13 @@ function check_dockercompose {
 
                 note "docker-compose version: $docker_compose_version"
                 # the version of docker-compose does not meet the requirement
-                if [ "$docker_compose_version_part1" -lt 1 ] || ([ "$docker_compose_version_part1" -eq 1 ] && [ "$docker_compose_version_part2" -lt 18 ])
+                if [ "$docker_compose_version_part1" -lt 2 ] || ([ "$docker_compose_version_part1" -lt 10 ] && [ "$docker_compose_version_part2" -lt 1 ])
                 then
-                        error "Need to upgrade docker-compose package to 1.18.0+."
+                        error "Need to upgrade docker-compose package to 2.10.1+."
                         exit 1
                 fi
         else
-                if ! [[ $(docker-compose version) =~ (([0-9]+)\.([0-9]+)([\.0-9]*)) ]]
+                if ! [[ $(docker compose version) =~ (([0-9]+)\.([0-9]+)([\.0-9]*)) ]]
                 then
                         error "Failed to parse docker-compose version."
                         exit 1

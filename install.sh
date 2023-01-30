@@ -41,17 +41,17 @@ cd $workdir
 
 if [ $worker ]; then
   note "Starting worker node"
-  docker-compose -f docker-compose.yml -f docker-compose.worker.yml up -d
+  docker compose -f docker-compose.yml -f docker-compose.worker.yml up -d
   exit 0
 fi
 
 if [ $update ]; then
   h2 "Updating station software"
-  docker-compose -f docker-compose.yml pull
+  docker compose -f docker-compose.yml pull
   h2 "Shutting down station  ..."
-  docker-compose down
+  docker compose down
   h2 "Restarting station..."
-  docker-compose up -d
+  docker compose up -d
   success $"----The station has been updated successfully.----"
   exit 0
 fi
@@ -59,15 +59,15 @@ fi
 h2 "[Step $item]: checking if docker is installed ..."; ((item+=1))
 check_docker
 
-h2 "[Step $item]: checking docker-compose is installed ..."; ((item+=1))
+h2 "[Step $item]: checking docker compose is installed ..."; ((item+=1))
 check_dockercompose
 
 
-if [ -n "$(docker-compose ps -q)"  ]
+if [ -n "$(docker compose ps -q)"  ]
 then
     note "stopping existing station instance ..."
     echo ""
-    docker-compose down
+    docker compose down
 fi
 echo ""
 
@@ -90,11 +90,11 @@ success $"----Installation succeeded.----"
 
 h2 "[Step $item]: Downloading docker images..."; ((item+=1))
 echo ""
-docker-compose pull
+docker compose pull
 echo ""
 
 h2 "[Step $item]: Starting the station ..."; ((item+=1))
 echo ""
-docker-compose up -d
+docker compose up -d
 echo ""
 success $"----The station has been installed and started successfully.----"
