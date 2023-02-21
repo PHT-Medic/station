@@ -122,12 +122,19 @@ def run_pht_train():
 
         return train_state
 
-    # @task()
-    # def validate_against_master_image(train_state):
-    #     master_image = train_state["config"]["master_image"]
-    #     img = train_state["img"]
-    #     validate_train_image(train_img=img, master_image=master_image)
-    #     return train_state
+    @task()
+    def validate_master_image(train_state):
+        master_image_source = train_state["config"]["source"].get("address", None)
+        master_image_tag = train_state["config"]["source"].get("tag", "latest")
+
+        master_image = master_image_source + ":" + master_image_tag
+        print(f"Validating against master image: {master_image}")
+        if not master_image_source:
+            raise ValueError("No master image source found in config")
+
+        img = train_state["img"]
+        validate_train_image(train_image_name=img, master_image_name=master_image)
+        return train_state
 
     @task()
     def pre_run_protocol(train_state):
@@ -235,7 +242,7 @@ def run_pht_train():
                 network_disabled=True,
                 stderr=True,
                 stdout=True,
-                device_requests=[device_request]
+                device_requests=[device_request] if device_request else None
             )
         # If the container is already in use remove it
         except APIError as e:
@@ -362,7 +369,7 @@ def run_pht_train():
     train_state = get_train_image_info()
     train_state = pull_docker_image(train_state)
     train_state = extract_config_and_query(train_state)
-    # train_state = validate_against_master_image(train_state)
+    train_state = validate_master_image(train_state)
     train_state = pre_run_protocol(train_state)
     train_state = execute_query(train_state)
     train_state = execute_container(train_state)

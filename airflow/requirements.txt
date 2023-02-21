@@ -1,8 +1,0 @@
-sqlalchemy < 1.4.0
-apache-airflow[celery,crypto,hashicorp,password,postgres,redis]
-docker
-psycopg2-binary
-python-dotenv
-minio
-requests
-loguru
