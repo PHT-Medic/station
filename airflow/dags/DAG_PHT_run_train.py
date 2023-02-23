@@ -129,6 +129,9 @@ def run_pht_train():
 
         master_image = master_image_source + ":" + master_image_tag
         print(f"Validating against master image: {master_image}")
+
+        client = docker.from_env()
+        client.images.pull(repository=master_image_source, tag=master_image_tag)
         if not master_image_source:
             raise ValueError("No master image source found in config")
 
