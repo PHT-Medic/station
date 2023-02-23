@@ -40,7 +40,7 @@ COPY airflow.cfg /root/airflow/airflow.cfg
 COPY ./dags /root/airflow/dags
 # install train container library
 
-RUN pip install --force-reinstall -v "pht-train-container-library==2.0.0a2"
+RUN pip install --force-reinstall -v "pht-train-container-library==2.0.0a3"
 
 COPY entrypoint.sh /root/entrypoint.sh
 RUN chmod +x /root/entrypoint.sh
