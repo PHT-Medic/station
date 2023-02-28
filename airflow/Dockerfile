@@ -1,4 +1,4 @@
-FROM ubuntu
+FROM python:3.10-bullseye
 MAINTAINER michael.graf@uni-tuebingen.de
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -17,13 +17,8 @@ RUN apt -y update && apt-get -y install software-properties-common && \
         locales \
         curl && \
 #    # install python
-    apt install python-is-python3 && apt install -y python3-pip && \
+#    apt install python-is-python3 && apt install -y python3-pip && \
     rm -rf /var/lib/apt/lists
-
-
-# Install container diff library
-RUN curl -LO https://storage.googleapis.com/container-diff/latest/container-diff-linux-amd64 && \
-    install container-diff-linux-amd64 /usr/local/bin/container-diff
 
 # install airflow
 RUN pip install "apache-airflow[celery,crypto,hashicorp,password,postgres,redis]==2.5.1" --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.5.1/constraints-3.10.txt"
