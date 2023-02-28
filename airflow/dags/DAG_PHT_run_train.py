@@ -2,6 +2,7 @@ import json
 import sys
 import os
 import os.path
+from pprint import pprint
 
 import docker
 import docker.types
@@ -107,18 +108,9 @@ def run_pht_train():
         return train_state
 
     @task()
-    def extract_config_and_query(train_state):
+    def extract_config(train_state):
         config = extract_train_config(train_state["img"])
         train_state["config"] = config.dict(by_alias=True)
-
-        # try to extract th query json if it exists under the specified path
-        try:
-            query = json.loads(extract_query_json(train_state["img"]))
-            train_state["query"] = query
-        except Exception as e:
-            print(e)
-            train_state["query"] = None
-            print("No query file found ")
 
         return train_state
 
@@ -151,8 +143,23 @@ def run_pht_train():
         return train_state
 
     @task()
+    def extract_query(train_state):
+        # try to extract th query json if it exists under the specified path
+        query = None
+        try:
+            query = json.loads(extract_query_json(train_state["img"]))
+            train_state["query"] = query
+            print("################### Query file was extracted ###################")
+            pprint(query)
+        except Exception as e:
+
+            train_state["query"] = None
+            print("################### Query file could not be extracted ###################")
+            print(query)
+            print(e)
+
+    @task()
     def execute_query(train_state):
-        print(train_state)
         query = train_state.get("query", None)
         if query:
             print("Query found, setting up connection to FHIR server")
@@ -338,7 +345,6 @@ def run_pht_train():
         print('Copied files into baseimage')
 
         print(f'Creating image: {train_state["repository"]}:{updated_tag}')
-        print(type(to_container))
         # Rebase the train
         try:
             img = to_container.commit(repository=train_state["repository"], tag=train_state["tag"])
@@ -371,9 +377,10 @@ def run_pht_train():
 
     train_state = get_train_image_info()
     train_state = pull_docker_image(train_state)
-    train_state = extract_config_and_query(train_state)
+    train_state = extract_config(train_state)
     train_state = validate_master_image(train_state)
     train_state = pre_run_protocol(train_state)
+    train_state = extract_query(train_state)
     train_state = execute_query(train_state)
     train_state = execute_container(train_state)
     train_state = post_run_protocol(train_state)
