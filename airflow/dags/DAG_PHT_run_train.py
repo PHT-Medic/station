@@ -43,7 +43,7 @@ default_args = {
 }
 
 
-@dag(default_args=default_args, schedule_interval=None, start_date=days_ago(2), tags=['pht', 'train'])
+@dag(default_args=default_args, schedule_interval=None, start_date=days_ago(2), tags=['pht', 'train'], )
 def run_pht_train():
     @task()
     def get_train_image_info():
@@ -157,6 +157,7 @@ def run_pht_train():
             print("################### Query file could not be extracted ###################")
             print(query)
             print(e)
+        return train_state
 
     @task()
     def execute_query(train_state):
