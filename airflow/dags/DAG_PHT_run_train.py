@@ -310,59 +310,59 @@ def run_pht_train():
 
         return train_state
 
-    @task()
-    def rebase(train_state):
-        base_image = ':'.join([train_state["repository"], 'base'])
-        client = docker.from_env(timeout=120)
-        to_container = client.containers.create(base_image)
-        updated_tag = train_state["tag"]
-
-        def _copy(from_cont, from_path, to_cont, to_path):
-            """
-            Copies a file from one container to another container
-            :param from_cont:
-            :param from_path:
-            :param to_cont:
-            :param to_path:
-            :return:
-            """
-            tar_stream, _ = from_cont.get_archive(from_path)
-            to_cont.put_archive(os.path.dirname(to_path), tar_stream)
-
-        from_container = client.containers.create(train_state["img"])
-
-        # Copy train files to base image
-        _copy(from_cont=from_container,
-              from_path="/opt/pht_train",
-              to_cont=to_container,
-              to_path="/opt/pht_train")
-
-        # Copy results to base image
-        _copy(from_cont=from_container,
-              from_path="/opt/pht_results",
-              to_cont=to_container,
-              to_path="/opt/pht_results")
-
-        # Hardcoded copying of train_config.json
-        _copy(from_cont=from_container,
-              from_path="/opt/train_config.json",
-              to_cont=to_container,
-              to_path="/opt/train_config.json")
-
-        print('Copied files into baseimage')
-
-        print(f'Creating image: {train_state["repository"]}:{updated_tag}')
-        # Rebase the train
-        try:
-            img = to_container.commit(repository=train_state["repository"], tag=train_state["tag"])
-            # remove executed containers -> only images needed from this point
-            print('Removing containers')
-            to_container.remove()
-            from_container.remove()
-            return train_state
-        except Exception as err:
-            print(err)
-            sys.exit()
+    # @task()
+    # def rebase(train_state):
+    #     base_image = ':'.join([train_state["repository"], 'base'])
+    #     client = docker.from_env(timeout=120)
+    #     to_container = client.containers.create(base_image)
+    #     updated_tag = train_state["tag"]
+    #
+    #     def _copy(from_cont, from_path, to_cont, to_path):
+    #         """
+    #         Copies a file from one container to another container
+    #         :param from_cont:
+    #         :param from_path:
+    #         :param to_cont:
+    #         :param to_path:
+    #         :return:
+    #         """
+    #         tar_stream, _ = from_cont.get_archive(from_path)
+    #         to_cont.put_archive(os.path.dirname(to_path), tar_stream)
+    #
+    #     from_container = client.containers.create(train_state["img"])
+    #
+    #     # Copy train files to base image
+    #     _copy(from_cont=from_container,
+    #           from_path="/opt/pht_train",
+    #           to_cont=to_container,
+    #           to_path="/opt/pht_train")
+    #
+    #     # Copy results to base image
+    #     _copy(from_cont=from_container,
+    #           from_path="/opt/pht_results",
+    #           to_cont=to_container,
+    #           to_path="/opt/pht_results")
+    #
+    #     # Hardcoded copying of train_config.json
+    #     _copy(from_cont=from_container,
+    #           from_path="/opt/train_config.json",
+    #           to_cont=to_container,
+    #           to_path="/opt/train_config.json")
+    #
+    #     print('Copied files into baseimage')
+    #
+    #     print(f'Creating image: {train_state["repository"]}:{updated_tag}')
+    #     # Rebase the train
+    #     try:
+    #         img = to_container.commit(repository=train_state["repository"], tag=train_state["tag"])
+    #         # remove executed containers -> only images needed from this point
+    #         print('Removing containers')
+    #         to_container.remove()
+    #         from_container.remove()
+    #         return train_state
+    #     except Exception as err:
+    #         print(err)
+    #         sys.exit()
 
     @task()
     def push_train_image(train_state):
@@ -391,7 +391,7 @@ def run_pht_train():
     train_state = execute_query(train_state)
     train_state = execute_container(train_state)
     train_state = post_run_protocol(train_state)
-    train_state = rebase(train_state)
+    # train_state = rebase(train_state)
     push_train_image(train_state)
 
 
