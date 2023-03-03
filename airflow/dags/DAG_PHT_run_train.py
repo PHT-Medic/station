@@ -331,6 +331,12 @@ def run_pht_train():
 
         from_container = client.containers.create(train_state["img"])
 
+        # Copy train files to base image
+        _copy(from_cont=from_container,
+              from_path="/opt/pht_train",
+              to_cont=to_container,
+              to_path="/opt/pht_train")
+
         # Copy results to base image
         _copy(from_cont=from_container,
               from_path="/opt/pht_results",
