@@ -4,20 +4,32 @@ import os
 import os.path
 from pprint import pprint
 
-import docker
-import docker.types
 from airflow.decorators import dag, task
 from airflow.operators.python import get_current_context
+from airflow.utils.dates import days_ago
 
+import docker
+import docker.types
 from docker.errors import APIError
 
-from airflow.utils.dates import days_ago
+from loguru import logger
+import logging
 
 from train_lib.docker_util.docker_ops import extract_train_config, extract_query_json
 from train_lib.security.protocol import SecurityProtocol
 from train_lib.clients import PHTFhirClient
 from train_lib.docker_util.validate_master_image import validate_train_image
 from train_lib.security.train_config import TrainConfig
+
+# configure logging
+class PropagateHandler(logging.Handler):
+    def emit(self, record):
+        logging.getLogger("airflow.task").handle(record)
+
+logger.add(PropagateHandler(), format="{message}")
+# task_logger = logging.getLogger("airflow.task")
+# logger.add(task_logger.ha)
+
 
 default_args = {
     'owner': 'airflow',

@@ -22,19 +22,13 @@ RUN apt -y update && apt-get -y install software-properties-common && \
 
 # install airflow
 RUN pip install "apache-airflow[celery,crypto,hashicorp,password,postgres,redis]==2.5.1" --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.5.1/constraints-3.10.txt"
+# install train container library
+RUN pip install --force-reinstall -v "pht-train-container-library==2.0.0a8"
 
 RUN mkdir /opt/train_data
-# COPY requirements.txt /tmp/requirements.txt
-
-
-# RUN pip install -r /tmp/requirements.txt
-
 
 COPY airflow.cfg /root/airflow/airflow.cfg
 COPY ./dags /root/airflow/dags
-# install train container library
-
-RUN pip install --force-reinstall -v "pht-train-container-library==2.0.0a7"
 
 COPY entrypoint.sh /root/entrypoint.sh
 RUN chmod +x /root/entrypoint.sh
