@@ -2,21 +2,34 @@ import json
 import sys
 import os
 import os.path
+from pprint import pprint
+
+from airflow.decorators import dag, task
+from airflow.operators.python import get_current_context
+from airflow.utils.dates import days_ago
 
 import docker
 import docker.types
-from airflow.decorators import dag, task
-from airflow.operators.python import get_current_context
-
 from docker.errors import APIError
 
-from airflow.utils.dates import days_ago
+from loguru import logger
+import logging
 
 from train_lib.docker_util.docker_ops import extract_train_config, extract_query_json
 from train_lib.security.protocol import SecurityProtocol
 from train_lib.clients import PHTFhirClient
 from train_lib.docker_util.validate_master_image import validate_train_image
 from train_lib.security.train_config import TrainConfig
+
+# configure logging
+class PropagateHandler(logging.Handler):
+    def emit(self, record):
+        logging.getLogger("airflow.task").handle(record)
+
+logger.add(PropagateHandler(), format="{message}")
+# task_logger = logging.getLogger("airflow.task")
+# logger.add(task_logger.ha)
+
 
 default_args = {
     'owner': 'airflow',
@@ -42,7 +55,7 @@ default_args = {
 }
 
 
-@dag(default_args=default_args, schedule_interval=None, start_date=days_ago(2), tags=['pht', 'train'])
+@dag(default_args=default_args, schedule_interval=None, start_date=days_ago(2), tags=['pht', 'train'], )
 def run_pht_train():
     @task()
     def get_train_image_info():
@@ -107,27 +120,28 @@ def run_pht_train():
         return train_state
 
     @task()
-    def extract_config_and_query(train_state):
+    def extract_config(train_state):
         config = extract_train_config(train_state["img"])
         train_state["config"] = config.dict(by_alias=True)
 
-        # try to extract th query json if it exists under the specified path
-        try:
-            query = json.loads(extract_query_json(train_state["img"]))
-            train_state["query"] = query
-        except Exception as e:
-            print(e)
-            train_state["query"] = None
-            print("No query file found ")
-
         return train_state
 
-    # @task()
-    # def validate_against_master_image(train_state):
-    #     master_image = train_state["config"]["master_image"]
-    #     img = train_state["img"]
-    #     validate_train_image(train_img=img, master_image=master_image)
-    #     return train_state
+    @task()
+    def validate_master_image(train_state):
+        master_image_source = train_state["config"]["source"].get("address", None)
+        master_image_tag = train_state["config"]["source"].get("tag", "latest")
+
+        master_image = master_image_source + ":" + master_image_tag
+        print(f"Validating against master image: {master_image}")
+
+        client = docker.from_env()
+        client.images.pull(repository=master_image_source, tag=master_image_tag)
+        if not master_image_source:
+            raise ValueError("No master image source found in config")
+
+        img = train_state["img"]
+        validate_train_image(train_image_name=img, master_image_name=master_image)
+        return train_state
 
     @task()
     def pre_run_protocol(train_state):
@@ -141,8 +155,24 @@ def run_pht_train():
         return train_state
 
     @task()
+    def extract_query(train_state):
+        # try to extract th query json if it exists under the specified path
+        query = None
+        try:
+            query = json.loads(extract_query_json(train_state["img"]))
+            train_state["query"] = query
+            print("################### Query file was extracted ###################")
+            pprint(query)
+        except Exception as e:
+
+            train_state["query"] = None
+            print("################### Query file could not be extracted ###################")
+            print(query)
+            print(e)
+        return train_state
+
+    @task()
     def execute_query(train_state):
-        print(train_state)
         query = train_state.get("query", None)
         if query:
             print("Query found, setting up connection to FHIR server")
@@ -235,7 +265,7 @@ def run_pht_train():
                 network_disabled=True,
                 stderr=True,
                 stdout=True,
-                device_requests=[device_request] if device_request else []
+                device_requests=[device_request] if device_request else None
             )
         # If the container is already in use remove it
         except APIError as e:
@@ -248,10 +278,11 @@ def run_pht_train():
         print(f"logs_container_start({logs})logs_end")
         exit_code = container_output["StatusCode"]
 
+
         if exit_code != 0:
             print(container_output)
             raise ValueError(f"The train execution returned a non zero exit code: {exit_code}")
-
+        #
         def _copy(from_cont, from_path, to_cont, to_path):
             """
             Copies a file from one container to another container
@@ -268,12 +299,21 @@ def run_pht_train():
         to_container = client.containers.create(base_image)
         # Copy results to base image
         _copy(from_cont=container,
+              from_path="/opt/pht_train",
+              to_cont=to_container,
+              to_path="/opt/pht_train")
+        _copy(from_cont=container,
               from_path="/opt/pht_results",
               to_cont=to_container,
               to_path="/opt/pht_results")
+        _copy(from_cont=container,
+              from_path="/opt/train_config.json",
+              to_cont=to_container,
+              to_path="/opt/train_config.json")
 
         to_container.commit(repository=train_state["repository"], tag=train_state["tag"])
         container.remove(v=True, force=True)
+        to_container.remove(v=True, force=True)
         if exit_code != 0:
             raise ValueError(f"The train execution returned a non zero exit code: {exit_code}")
 
@@ -291,55 +331,6 @@ def run_pht_train():
                              )
 
         return train_state
-
-    @task()
-    def rebase(train_state):
-        base_image = ':'.join([train_state["repository"], 'base'])
-        client = docker.from_env(timeout=120)
-        to_container = client.containers.create(base_image)
-        updated_tag = train_state["tag"]
-
-        def _copy(from_cont, from_path, to_cont, to_path):
-            """
-            Copies a file from one container to another container
-            :param from_cont:
-            :param from_path:
-            :param to_cont:
-            :param to_path:
-            :return:
-            """
-            tar_stream, _ = from_cont.get_archive(from_path)
-            to_cont.put_archive(os.path.dirname(to_path), tar_stream)
-
-        from_container = client.containers.create(train_state["img"])
-
-        # Copy results to base image
-        _copy(from_cont=from_container,
-              from_path="/opt/pht_results",
-              to_cont=to_container,
-              to_path="/opt/pht_results")
-
-        # Hardcoded copying of train_config.json
-        _copy(from_cont=from_container,
-              from_path="/opt/train_config.json",
-              to_cont=to_container,
-              to_path="/opt/train_config.json")
-
-        print('Copied files into baseimage')
-
-        print(f'Creating image: {train_state["repository"]}:{updated_tag}')
-        print(type(to_container))
-        # Rebase the train
-        try:
-            img = to_container.commit(repository=train_state["repository"], tag=train_state["tag"])
-            # remove executed containers -> only images needed from this point
-            print('Removing containers')
-            to_container.remove()
-            from_container.remove()
-            return train_state
-        except Exception as err:
-            print(err)
-            sys.exit()
 
     @task()
     def push_train_image(train_state):
@@ -361,13 +352,13 @@ def run_pht_train():
 
     train_state = get_train_image_info()
     train_state = pull_docker_image(train_state)
-    train_state = extract_config_and_query(train_state)
-    # train_state = validate_against_master_image(train_state)
+    train_state = extract_config(train_state)
+    train_state = validate_master_image(train_state)
     train_state = pre_run_protocol(train_state)
+    train_state = extract_query(train_state)
     train_state = execute_query(train_state)
     train_state = execute_container(train_state)
     train_state = post_run_protocol(train_state)
-    train_state = rebase(train_state)
     push_train_image(train_state)
 
 

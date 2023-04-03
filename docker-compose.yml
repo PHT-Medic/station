@@ -13,6 +13,7 @@ services:
       # Station Private Key environment variable needs to be set and registered
       - $STATION_PRIVATE_KEY_PATH:/opt/private_key.pem
       - $STATION_DATA_DIR:$AIRFLOW_DATA_DIR
+    restart: unless-stopped
     depends_on:
       - pg_station
     environment:
