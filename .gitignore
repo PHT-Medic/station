@@ -14,3 +14,5 @@ venv/
 **.pem
 **.key
 station_data
+
+scratch.json

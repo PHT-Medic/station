@@ -64,6 +64,22 @@ configuration. STATION_ID must be consistent to Vault and Harbor.
 4. Login to the airflow web interface with the previously set user credentials
 
 
+### Trigger a train execution
+
+Adapt the json in the following section with the appropriate station and train id 
+
+```json
+{
+  "repository": "<HARBOR-REGISTRY>/<STATION_NAMESPACE>/<TRAIN-IMAGE>",
+  "tag": "latest",
+  "env": {
+    "FHIR_SERVER_URL": "<FHIR-ADDRESS>",
+    "FHIR_USER": "<ID>",
+    "FHIR_PW": "<PSW>"
+  }
+}
+```
+
 ## Troubleshooting/FAQ
 
 ### Using pre-built images
