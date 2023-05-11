@@ -1,4 +1,5 @@
-FROM python:3.10-bullseye
+FROM bitnami/python:3.10.11-debian-11-r13
+
 MAINTAINER michael.graf@uni-tuebingen.de
 
 ENV DEBIAN_FRONTEND=noninteractive
