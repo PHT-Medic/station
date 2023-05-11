@@ -33,6 +33,14 @@ COPY ./dags /root/airflow/dags
 
 COPY entrypoint.sh /root/entrypoint.sh
 RUN chmod +x /root/entrypoint.sh
+
+# uninstall curl/libcurl3-gnutls from the image
+RUN apt-get remove -y libcurl3-gnutls && \
+    apt-get remove -y libcurl4 && \
+    apt-get autoremove -y && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists
+
 ENTRYPOINT ["/root/entrypoint.sh"]
 CMD ["webserver"]
 
