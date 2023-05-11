@@ -1,6 +1,3 @@
 general:
-  vulnerabilities:
-    -
-
   bestPracticeViolations:
     - CIS-DI-0010
