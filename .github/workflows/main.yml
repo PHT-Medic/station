@@ -30,6 +30,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+
       - name: Build image
         run: docker build ./airflow --file ./airflow/Dockerfile --no-cache --tag $IMAGE_NAME --label "runnumber=${GITHUB_RUN_ID}"
 
