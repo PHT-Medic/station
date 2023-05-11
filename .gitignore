@@ -11,3 +11,8 @@ $HOME
 rabbitmq/
 venv/
 .env
+**.pem
+**.key
+station_data
+
+scratch.json

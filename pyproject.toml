@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "station"
+version = "2.0.0"
+description = "PHT Station"
+authors = ["Michael Graf <michael.graf3110@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+apache-airflow = "^2.5.1"
+pht-train-container-library = {version = "*", allow-prereleases = true}
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
