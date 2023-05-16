@@ -292,7 +292,6 @@ def run_pht_train():
                 device_requests=[device_request] if device_request else None,
             )
 
-            container.commit(repository=train_state["repository"], tag="latest")
         # If the container is already in use remove it
         except APIError as e:
             print(e)
@@ -306,6 +305,7 @@ def run_pht_train():
                 stdout=True,
             )
         container_output = container.wait()
+        container.commit(repository=train_state["img"], tag="latest")
         # Print The logs generated from std out und err out during the container run
         logs = container.logs().decode("utf-8")
         print(f"logs_container_start({logs})logs_end")
