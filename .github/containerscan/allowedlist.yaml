@@ -45,6 +45,8 @@ general:
     - CVE-2023-29005
     - CVE-2021-33026
     - CVE-2023-25577
+    - CVE-2021-31239
+    - CVE-2022-3567
 
 
   bestPracticeViolations:

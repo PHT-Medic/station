@@ -1,4 +1,4 @@
-FROM bitnami/python:latest
+FROM bitnami/python:3.10-debian-11
 
 MAINTAINER michael.graf@uni-tuebingen.de
 
