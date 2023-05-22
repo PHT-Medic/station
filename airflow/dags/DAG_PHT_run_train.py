@@ -334,7 +334,7 @@ def run_pht_train():
 
     @task()
     def push_train_image(train_state):
-        client = docker.from_env()
+        client = docker.from_env(timeout=600)
 
         registry_address = os.getenv("HARBOR_URL").split("//")[-1]
 
