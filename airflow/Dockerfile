@@ -1,4 +1,5 @@
-FROM python:3.10-bullseye
+FROM bitnami/python:3.10-debian-11
+
 MAINTAINER michael.graf@uni-tuebingen.de
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -32,6 +33,14 @@ COPY ./dags /root/airflow/dags
 
 COPY entrypoint.sh /root/entrypoint.sh
 RUN chmod +x /root/entrypoint.sh
+
+# uninstall curl/libcurl3-gnutls from the image
+RUN apt-get remove -y libcurl3-gnutls && \
+    apt-get remove -y libcurl4 && \
+    apt-get autoremove -y && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists
+
 ENTRYPOINT ["/root/entrypoint.sh"]
 CMD ["webserver"]
 
