@@ -107,7 +107,7 @@ def run_pht_train():
 
     @task()
     def pull_docker_image(train_state):
-        client = docker.from_env()
+        client = docker.from_env(timeout=900)
 
         registry_address = os.getenv("HARBOR_URL").split("//")[-1]
         print(registry_address)
