@@ -50,7 +50,21 @@ general:
     - CVE-2020-36694
     - CVE-2023-33250
     - CVE-2023-28370
-
+    - CVE-2023-35827
+    - CVE-2023-35824
+    - CVE-2023-35823
+    - CVE-2023-35788
+    - CVE-2023-3397
+    - CVE-2023-3268
+    - CVE-2023-3141
+    - CVE-2023-3111
+    - CVE-2023-2650
+    - CVE-2023-2650
+    - CVE-2023-2953
+    - CVE-2023-35829
+    - CVE-2023-2650
+    - CVE-2023-30608
+    - CVE-2023-25754 # Privilege Context Switching Error vulnerability this moment not relvant with one user per statin in TODO update to Airflow 2.6.0 or higher
 
   bestPracticeViolations:
     - CIS-DI-0010
