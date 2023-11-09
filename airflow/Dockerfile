@@ -24,7 +24,7 @@ RUN apt -y update && apt-get -y install software-properties-common && \
 # install airflow
 RUN pip install "apache-airflow[celery,crypto,hashicorp,password,postgres,redis]==2.6.3" --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.6.3/constraints-3.10.txt"
 # install train container library
-RUN pip install --force-reinstall --no-cache-dir -v "pht-train-container-library==2.0.5"
+RUN pip install --force-reinstall --no-cache-dir -v "pht-train-container-library==2.0.6a0"
 
 RUN mkdir /opt/train_data
 
