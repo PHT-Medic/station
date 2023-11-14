@@ -273,6 +273,10 @@ def run_pht_train():
                     raise ValueError(
                         f"Invalid gpu configuration: {gpu_config}. Must be a list of integers or 'all'"
                     )
+            elif isinstance(gpu_config, int):
+                device_request = docker.types.DeviceRequest(
+                    device_ids=[str(gpu_config)], capabilities=[["gpu"]]
+                )
             else:
                 raise ValueError(
                     f"Invalid gpu configuration: {gpu_config}. Must be a list of integers or 'all'"
