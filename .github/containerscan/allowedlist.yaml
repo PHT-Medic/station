@@ -38,6 +38,7 @@ general:
     - CVE-2023-46813
     - CVE-2023-39198
     - CVE-2023-5869
+    - CVE-2023-5678
 
   bestPracticeViolations:
     - CIS-DI-0010
